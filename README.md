@@ -12,5 +12,5 @@ This GitHub repository stores all data and code to replicate LISPOP's analysis o
 
 4. `tables` produces all tables produced.
 
-This is a line from RStudio
+This is a line from RStudio.
 
