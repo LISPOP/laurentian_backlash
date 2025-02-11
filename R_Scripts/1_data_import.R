@@ -9,3 +9,4 @@ library(tidyverse)
 #comment
 on18 <- read_excel(here("data", "on2018_results.xlsx"))
 on22 <- read_excel(here("data", "on2022_results.xlsx"))
+on <- bind_rows(on18, on22)
