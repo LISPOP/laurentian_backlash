@@ -17,3 +17,8 @@ on <- bind_rows(on18, on22)
 glimpse(on18)
 glimpse(on22)
 glimpse(on)
+
+library(dplyr)
+filter(on)
+newdf <- df %>%
+  filter(EventNameEnglish == "2020 Provincial By-elections" | IsGeneralElection == "0")
