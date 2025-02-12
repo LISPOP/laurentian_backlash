@@ -21,4 +21,4 @@ glimpse(on)
 library(dplyr)
 # Exclude specific elections by name
 on %>%
-  filter(IsGeneralElection != 0)
+  filter(IsGeneralElection == 1)
