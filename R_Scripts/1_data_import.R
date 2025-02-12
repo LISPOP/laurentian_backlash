@@ -22,3 +22,17 @@ library(dplyr)
 # Exclude specific elections by number
 on %>%
   filter(IsGeneralElection == 1)->on
+
+library(dplyr)
+# Rename columns
+on <- on %>%
+  rename(
+    Election = `EventNameEnglish`,
+    Date = `PollingDate`,
+    Party = `PoliticalInterestCode`,
+    Votes = `TotalValidBallotsCast`,
+    Percent = `PercentOfTotalValidBallotsCast`
+  )
+
+# View updated dataset
+head(on)
