@@ -34,5 +34,12 @@ on <- on %>%
     Percent = `PercentOfTotalValidBallotsCast`
   )
 
-# View updated dataset
-head(on)
+library(dplyr)
+
+on <- on %>%
+  mutate(Party = recode(Party, 
+                        "GPO" = "Green", 
+                        "PCP" = "PC", 
+                        "LIB" = "Liberal"))
+
+View(on)
