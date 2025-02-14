@@ -19,8 +19,8 @@ glimpse(on18)
 glimpse(on22)
 glimpse(on)
 
+
 #Let's save that
-view(on22)
 on %>%
 #Still form our gorups
 group_by(ElectoralDistrictNumber) %>% 
@@ -30,3 +30,30 @@ mutate(n=sum(TotalValidBallotsCast))->on
 view(on)
 on %>%
 mutate(mv=Plurality/n)->on
+
+library(dplyr)
+# Exclude specific elections by number
+on %>%
+  filter(IsGeneralElection == 1)->on
+
+library(dplyr)
+# Rename columns
+on <- on %>%
+  rename(
+    Election = `EventNameEnglish`,
+    Date = `PollingDate`,
+    Party = `PoliticalInterestCode`,
+    Votes = `TotalValidBallotsCast`,
+    Percent = `PercentOfTotalValidBallotsCast`
+  )
+
+library(dplyr)
+
+on <- on %>%
+  mutate(Party = recode(Party, 
+                        "GPO" = "Green", 
+                        "PCP" = "PC", 
+                        "LIB" = "Liberal"))
+
+View(on)
+
