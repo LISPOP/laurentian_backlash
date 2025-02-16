@@ -57,3 +57,7 @@ on <- on %>%
 
 View(on)
 
+library(dplyr)
+on_filtered <- on %>% filter(mv != 0)
+View(on)
+on_filtered <- on %>% filter(Plurality != 0)
