@@ -21,3 +21,18 @@ mutate(n=sum(TotalValidBallotsCast))->on22
 view(on22)
 on22 %>%
 mutate(mv=Plurality/n)->on22
+
+library(dplyr)
+#Filter out rows where mv is 0
+on_filtered <- on %>% filter(mv !=0)
+on_filtered <- on %>% filter(Plurality != 0)
+#Check
+view(on)
+
+#Group by electoral district number and select the 10 smallest mv values per group
+on_filtered <- on_filtered %>%
+group_by(ElectoralDistrictNumber) %>%
+slice_min(mv, n=10)
+
+#View the filtered dataset
+view(on_filtered)
