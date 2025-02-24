@@ -20,6 +20,7 @@ glimpse(on22)
 glimpse(on)
 
 
+
 #Let's save that
 on %>%
 #Still form our gorups
@@ -59,6 +60,16 @@ on <- on %>%
                         "GPO" = "Green", 
                         "PCP" = "PC", 
                         "LIB" = "Liberal"))
+
+on %>% 
+  mutate(Election=case_when(
+    str_detect(Election, "2022")==TRUE~ "2022 General Election",
+    TRUE~Election
+  ))->on
+
+#Turn all candidate names to Title Case
+on %>% 
+  mutate(NameOfCandidates=str_to_title(NameOfCandidates))->on
 
 #Remember: AT this point we have one row for each candidate
 names(on)
