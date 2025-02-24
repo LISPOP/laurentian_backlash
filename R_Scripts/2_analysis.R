@@ -33,6 +33,11 @@ on_filtered %>%
   select(Election, ElectoralDistrictName, NameOfCandidates, `Winning Party`=Party, `First-Second`=Race,Margin=mv) %>% 
   group_by(Election, `First-Second`) %>% 
   arrange(Margin, .by_group=T) ->swings
+#Export swings in excel
+swings %>% 
+  write_csv(., file=here("Tables/swings.csv"))
+
+#Export swings in kable format
   kable(format="html", digits=3) %>% 
   save_kable(., file=here("Tables", "swings.html")) 
 
