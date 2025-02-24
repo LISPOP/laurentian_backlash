@@ -36,7 +36,7 @@ on_filtered %>%
 #Export swings in excel
 swings %>% 
   mutate(Margin=round(Margin, 3)) %>% 
-  write.csv(., file=here("Tables", "swings.csv"))
+  write_csv(., file=here("Tables", "swings.csv"))
 
 #Export swings in kable format
   kable(format="html", digits=3) %>% 
@@ -52,7 +52,10 @@ on_filtered %>%
   group_by(Election, `First-Second`) %>% 
 count() %>% 
   arrange(desc(Election),desc(n)) ->races
+races %>% 
+  write_csv(., file=here('Tables', 'races.csv'))
 library(kableExtra)
+
 races %>% 
   kable(., format="html") %>% 
   save_kable(., file=here("Tables", "races.html"))
