@@ -35,13 +35,14 @@ on_filtered %>%
   arrange(Margin, .by_group=T) ->swings
 #Export swings in excel
 swings %>% 
-  write_csv(., file=here("Tables/swings.csv"))
+  mutate(Margin=round(Margin, 3)) %>% 
+  write.csv(., file=here("Tables", "swings.csv"))
 
 #Export swings in kable format
   kable(format="html", digits=3) %>% 
   save_kable(., file=here("Tables", "swings.html")) 
 
-
+#Count the number of races by first and second
 on_filtered %>%
   # group_by(Election) %>%
   #slice_min(mv, n=15) %>% 
@@ -50,6 +51,8 @@ on_filtered %>%
   select(Election, ElectoralDistrictName, NameOfCandidates, `Winning Party`=Party, `First-Second`=Race,Margin=mv) %>% 
   group_by(Election, `First-Second`) %>% 
 count() %>% 
-  arrange(desc(Election),desc(n)) %>% 
+  arrange(desc(Election),desc(n)) ->races
+library(kableExtra)
+races %>% 
   kable(., format="html") %>% 
   save_kable(., file=here("Tables", "races.html"))
