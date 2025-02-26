@@ -1,14 +1,13 @@
 source("R_Scripts/1_data_import.R")
 
 # What is the average mv for each election
-# Hint:
 # Form groups of interest (i.e. eleciton) and then summarize those groups by calculating the 
 # average (or mean)
 # Calculate the average margin of victory (MV) by election
 
 library(dplyr)
 
-# Compute the average margin of victory (MV) per election
+# Calculating average margin of victory (MV) per election
 on_summary <- on %>%
   mutate(mv_per_ballot = mv / Votes) %>%
   group_by(Election) %>%
