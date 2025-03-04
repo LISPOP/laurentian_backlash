@@ -8,10 +8,13 @@ library(tidyverse)
 library(readxl)
 library(knitr)
 library(kableExtra)
+install.packages("foreign")
 #push
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
 
+#opes18<-read.dta("https://github.com/LISPOP/OPES_2018/blob/master/Data/LISPOP%202018%20OPES%20STATA.dta")
+opes18<-read.spss("https://github.com/LISPOP/OPES_2018/blob/master/Data/Ontario%20ES%202018%20LISPOP.sav")
 
 #bind_rows
 on <- bind_rows(on18, on22)
