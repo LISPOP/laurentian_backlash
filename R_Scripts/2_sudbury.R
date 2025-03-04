@@ -22,3 +22,18 @@ on %>%
   filter(Party=="PC") %>% 
   ggplot(., aes(x=as.factor(Date), y=Percent, col=Sudbury))+geom_point()+scale_color_manual(values=c("lightgrey", "darkred"))+
   geom_smooth(method="lm")+geom_jitter()
+
+#Defining northern ridings
+northern_ridings <- c("Algoma-Manitoulin", "Kiiwetinoong", "Kenora-Rainy River", "Mushkegowuk- James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay- Atikokan", "Thunder Bay- Superior North", "Timiskaming- Cochrane", "Timmins")
+
+#Creating dummy variable
+df$northern <- ifelse(df$ElectoralDistrictName %in% northern_ridings, 1, 0)
+
+#Results
+table(df$northern)
+
+library(dplyr)
+df %>%
+  group_by(northern) %>%
+  summarise(avg_vote = mean(vote_share, na.rm = TRUE))
+
