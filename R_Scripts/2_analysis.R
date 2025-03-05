@@ -28,3 +28,4 @@ ggplot(on_filtered, aes(x = mv)) +
        x = "Margin of Victory",
        y = "Frequency") +
   theme_minimal()
+
