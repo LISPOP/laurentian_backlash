@@ -11,7 +11,7 @@ on %>%
     TRUE~"Other",
   ))->on
 on$Sudbury<-factor(on$Sudbury, levels=c("Other", "Sudbury"))
-on %>% 
+on %>% git
   group_by(Sudbury) %>% 
   filter(Date>2019) %>% 
   summarize(avg=mean(Delta))
@@ -22,3 +22,18 @@ on %>%
   filter(Party=="PC") %>% 
   ggplot(., aes(x=as.factor(Date), y=Percent, col=Sudbury))+geom_point()+scale_color_manual(values=c("lightgrey", "darkred"))+
   geom_smooth(method="lm")+geom_jitter()
+
+#Defining northern ridings
+northern_ridings <- c("Algoma-Manitoulin", "Kiiwetinoong", "Kenora-Rainy River", "Mushkegowuk- James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay- Atikokan", "Thunder Bay- Superior North", "Timiskaming- Cochrane", "Timmins")
+
+#Creating dummy variable
+on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
+
+#Results
+table(on$northern)
+
+library(dplyr)
+on %>%
+  group_by(northern) %>%
+  summarise(avg_vote = mean(vote_share, na.rm = TRUE))
+

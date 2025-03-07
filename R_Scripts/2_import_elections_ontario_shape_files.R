@@ -12,5 +12,9 @@ glimpse(das)
 library(tidyverse)
 das %>% 
   filter(PRUID=="35")->das
+#Defining northern ridings
+northern_ridings <- c("Algoma—Manitoulin", "Kiiwetinoong", "Kenora—Rainy River", "Mushkegowuk—James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay—Atikokan", "Thunder Bay—Superior North", "Timiskaming—Cochrane", "Timmins")
+length(northern_ridings)
+#Creating dummy variable
+ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
 
-names(ontario)
