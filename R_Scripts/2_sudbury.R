@@ -27,13 +27,14 @@ on %>%
 northern_ridings <- c("Algoma-Manitoulin", "Kiiwetinoong", "Kenora-Rainy River", "Mushkegowuk- James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay- Atikokan", "Thunder Bay- Superior North", "Timiskaming- Cochrane", "Timmins")
 
 #Creating dummy variable
-df$northern <- ifelse(df$ElectoralDistrictName %in% northern_ridings, 1, 0)
+on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
 
 #Results
-table(df$northern)
+table(on$northern)
 
-library(dplyr)
-df %>%
+# Calculate change in vote share
+on %>%
+  filter(Date > 2019) %>%
   group_by(northern) %>%
-  summarise(avg_vote = mean(vote_share, na.rm = TRUE))
+  summarise(avg_change = mean(Delta, na.rm = TRUE))
 
