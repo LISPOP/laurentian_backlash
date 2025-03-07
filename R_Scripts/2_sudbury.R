@@ -32,7 +32,7 @@ on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
 #Results
 table(on$northern)
 
-# Calculate change in vote share
+#Calculate change in vote share
 on %>%
   filter(Date > 2019) %>%
   group_by(northern) %>%
