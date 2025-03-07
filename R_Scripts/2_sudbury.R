@@ -1,3 +1,6 @@
+library(dplyr)
+library(ggplot2)
+
 source("R_Scripts/1_data_import.R")
 on %>% 
   filter(Party=="PC") %>% 
@@ -34,7 +37,6 @@ table(on$northern)
 
 #Calculate change in vote share
 on %>%
-  filter(Date > 2019) %>%
+  dplyr::filter(Date > 2019) %>%
   group_by(northern) %>%
   summarise(avg_change = mean(Delta, na.rm = TRUE))
-
