@@ -1,15 +1,16 @@
 #import shapefiles
 library(sf)
 library(here)
-ontario<-read_sf(here("data/Electoral District Shapefile - 2022 General Election/"))
+ontario<-read_sf(here("data/electoral_districts/"))
 library(ggplot2)
+library(tidyverse)
 ontario %>% ggplot()+geom_sf()
 #Load dissemination areas
 das<-read_sf(here("data/statscan_dsa/data"))
 head(das)
 names(das)
 glimpse(das)
-library(tidyverse)
+
 das %>% 
   filter(PRUID=="35")->das
 #Defining northern ridings
@@ -18,13 +19,10 @@ length(northern_ridings)
 #Creating dummy variable
 ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
 
-ontario %>% 
-  filter(northern==1)->ontario
+#Filter the ontario shape files to include only the northern districts
+ontario<-subset(ontario, northern==1)
+names(das)
 names(ontario)
-ontario$ED_ID
-ontario %>% 
-  filter(ED_ID==105) %>% 
-  ggplot()+geom_sf()+
-  geom_sf(data=das)
+das %>% 
+  st_join(., ontario, by="geometry")
 
-glimpse(das)
