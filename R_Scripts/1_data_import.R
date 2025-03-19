@@ -19,7 +19,7 @@ on <- bind_rows(on18, on22)
 glimpse(on18)
 glimpse(on22)
 glimpse(on)
-
+on$ElectoralDistrictName
 
 
 #Let's save that
@@ -85,5 +85,3 @@ on %>%
     str_detect(Election, "2022")~2022
   ))->on
 
-#Filter PCs
-on
