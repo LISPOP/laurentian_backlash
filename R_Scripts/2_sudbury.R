@@ -27,7 +27,7 @@ on %>%
   geom_smooth(method="lm")+geom_jitter()
 
 #Defining northern ridings
-northern_ridings <- c("Algoma-Manitoulin", "Kiiwetinoong", "Kenora-Rainy River", "Mushkegowuk- James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay- Atikokan", "Thunder Bay- Superior North", "Timiskaming- Cochrane", "Timmins")
+northern_ridings <- c("Algoma--Manitoulin", "Kiiwetinoong", "Kenora--Rainy River", "Mushkegowuk--James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay--Atikokan", "Thunder Bay--Superior North", "Timiskaming--Cochrane", "Timmins", "Parry Sound--Muskoka")
 
 #Creating dummy variable
 on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
@@ -40,3 +40,10 @@ on %>%
   dplyr::filter(Date > 2019) %>%
   group_by(northern) %>%
   summarise(avg_change = mean(Delta, na.rm = TRUE))
+
+#Replacing hyphenated dashes
+on18 <- on18 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
+on22 <- on22 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
