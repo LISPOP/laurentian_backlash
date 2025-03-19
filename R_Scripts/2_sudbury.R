@@ -40,10 +40,3 @@ on %>%
   dplyr::filter(Date > 2019) %>%
   group_by(northern) %>%
   summarise(avg_change = mean(Delta, na.rm = TRUE))
-
-#Replacing hyphenated dashes
-on18 <- on18 %>%
-  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
-
-on22 <- on22 %>%
-  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
