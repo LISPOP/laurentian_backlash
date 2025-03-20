@@ -1,3 +1,6 @@
+library(dplyr)
+library(ggplot2)
+
 source("R_Scripts/1_data_import.R")
 on %>% 
   filter(Party=="PC") %>% 
@@ -24,14 +27,9 @@ on %>%
   geom_smooth(method="lm")+geom_jitter()
 
 #Defining northern ridings
-northern_ridings <- c("Algoma-Manitoulin", "Kiiwetinoong", "Kenora-Rainy River", "Mushkegowuk- James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay- Atikokan", "Thunder Bay- Superior North", "Timiskaming- Cochrane", "Timmins")
+northern_ridings <- c("Algoma--Manitoulin", "Kiiwetinoong", "Kenora--Rainy River", "Mushkegowuk--James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay--Atikokan", "Thunder Bay--Superior North", "Timiskaming--Cochrane", "Timmins", "Parry Sound--Muskoka")
 
 #Creating dummy variable
-
-on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
-
-#Results
-table(on$northern)
 
 library(dplyr)
 
@@ -44,4 +42,11 @@ library(dplyr)
 on %>%
   group_by(northern) %>%
   summarise(avg_vote = mean(Percent, na.rm = TRUE))
+
+
+#Calculate change in vote share
+on %>%
+  dplyr::filter(Date > 2019) %>%
+  group_by(northern) %>%
+  summarise(avg_change = mean(Delta, na.rm = TRUE))
 

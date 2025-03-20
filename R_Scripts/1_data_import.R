@@ -12,6 +12,12 @@ library(kableExtra)
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
 
+#Replacing hyphenated dashes
+on18 <- on18 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
+on22 <- on22 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
 
 #bind_rows
 on <- bind_rows(on18, on22)
@@ -24,10 +30,10 @@ on$ElectoralDistrictName
 
 #Let's save that
 on %>%
-#Still form our gorups
-group_by(ElectoralDistrictNumber) %>% 
-#Here instead of summarize, we mutate the dataframe enroll
-mutate(n=sum(TotalValidBallotsCast))->on
+  #Still form our gorups
+  group_by(ElectoralDistrictNumber) %>% 
+  #Here instead of summarize, we mutate the dataframe enroll
+  mutate(n=sum(TotalValidBallotsCast))->on
 #Check
 on
 #This code creates the variable mv 
@@ -35,7 +41,7 @@ on
 #It is effectively a measure of how large the victory was as a percentage of the total ballots cast
 
 on %>%
-mutate(mv=Plurality/n)->on
+  mutate(mv=Plurality/n)->on
 
 library(dplyr)
 # This code excludes byelections
@@ -84,4 +90,3 @@ on %>%
     str_detect(Election, "2018")~2018,
     str_detect(Election, "2022")~2022
   ))->on
-
