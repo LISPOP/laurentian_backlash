@@ -3,3 +3,4 @@
 *.sh; filter=lfs diff=lfs merge=lfs -text
 data/electoral_districts/*.shp filter=lfs diff=lfs merge=lfs -text
 data/statscan_dsa/data/geodatabase.gdb/*.gdbtable filter=lfs diff=lfs merge=lfs -text
+data/*/*.csv filter=lfs diff=lfs merge=lfs -text
