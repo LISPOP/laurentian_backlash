@@ -15,6 +15,9 @@ ontario
 #Load dissemination areas
 #read in Statscan Dissemination Boundary files
 das<-get_statcan_geographies(level="DA", census_year="2021")
+#Sys.getenv()
+#set_cancensus_api_key("CensusMapper_e0bb5e9bb16c197f306a580284d35b5b", install = TRUE)
+#das<-get_census("CA21", regions=list(PR="35"), level='DA', vectors=c("v_CA21_1","v_CA21_1186","v_CA21_5862"), geo_format='sf', labels='short')
 
 #das<-read_sf(here("data/statscan_dsa/data"))
 #checks
@@ -72,60 +75,131 @@ ontario_da_in %>%
 #And do the same for the overlapping DAs
 ontario_da_overlap %>% 
   filter(northern==1)->northern_da_overlap
-
+length(unique(northern_da_in$DAUID))
+length(unique(northern_da_overlap$DAUID))
+northern_da_overlap %>% 
+  filter(duplicated(DAUID)) 
+#There are multiple rows for the overlapping dissemination area in this data frame. So we should drop them
+#The only thing we are going to do with them is compare their demographics with the
+# the non-overlapping dissemination areas to see if there is any difference.
+northern_da_overlap %>% 
+  distinct(DAUID, .keep_all = T)->northern_da_overlap
 
 #Count how many DAS in Ontario do not fit into an electoral district?
 nrow(northern_da_in)
 nrow(northern_da_overlap)
-
-ggplot()+
-  geom_sf(data=northern_da_in, col=NA, fill="darkgrey")+
-  geom_sf(data=northern_da_overlap, col="black",fill="lightgrey", size=1)+
-  geom_sf(data=subset(ontario, northern==1), col="darkred", fill=NA)+
-  geom_sf_text(data=subset(ontario, northern==1), aes(label=str_replace_all(ENGLISH_NA, "—", "\n")), size=2, col="darkred")+
-  theme_minimal()
-
-ggsave(file=here("Plots", "ontario_dissemination_areas.png", dpi=300), height=6, width=6)
+# 
+# ggplot()+
+#   geom_sf(data=northern_da_in, col=NA, fill="darkgrey")+
+#   geom_sf(data=northern_da_overlap, col="black",fill="lightgrey", size=1)+
+#   geom_sf(data=subset(ontario, northern==1), col="darkred", fill=NA)+
+#   geom_sf_text(data=subset(ontario, northern==1), aes(label=str_replace_all(ENGLISH_NA, "—", "\n")), size=2, col="darkred")+
+#   theme_minimal()
+# 
+# ggsave(file=here("Plots", "ontario_dissemination_areas.png", dpi=300), height=6, width=6)
 
 #### Get Dissemination Areas
 #REad in CAnada das
 ##Get the 
-#canada_das<-vroom::vroom(file=here("data/statscan_geography_profiles/das/98-401-X2021006_English_CSV_data_Ontario.csv"))
+# library(cancensus)
+# ?get_census
+# canada_das<-get_census("CA21", regions=list(PR="35"), level='DA', vectors=c("v_CA21_1","v_CA21_1186","v_CA21_5862"), geo_format='sf')
+# ?get_census
+canada_das<-vroom::vroom(file=here("data/statscan_geography_profiles/das/98-401-X2021006_English_CSV_data_Ontario.csv"))
 #names(canada_das)
 #names(northern_da_in)
-#Get 
-
-metadata<-get_statcan_wds_metadata(census_year="2021", level="DA")
-names(metadata)
-view(metadata)
-#Search thtrough to find the characteristics for French Mother tongue
-# This may require some fiddling
-metadata %>% 
-  filter(str_detect(en, "French")) # # 371
-#Do the same for earned doctorates
-metadata %>% 
-  filter(str_detect(en, "doctorate"))
-#Filter meta data for those two characteristics and store in vars
-metadata %>% 
-  filter(ID==2013|ID==371)->vars
-
-vars %>% 
-  mutate(ID=as.numeric(ID))->vars
-dguids<-northern_da_in %>% 
-  pull(DGUID)
-northern_da_data<-get_statcan_wds_data(DGUIDs=dguids, members=vars$ID, gender="Total")
-get_statcan_wds_data(DGUIDs="2013A000459021",level="FED")
+# #Get 
+# 
+# metadata<-get_statcan_wds_metadata(census_year="2021", level="DA")
+# 
+# metadata %>% 
+#   filter(`Codelist en`=="Characteristic")->characteristics
+# #Search thtrough to find the characteristics for French Mother tongue
+# # This may require some fiddling
+# characteristics %>% 
+#   filter(str_detect(en, "French")) # # 371
+# #Do the same for earned doctorates
+# characteristics%>% 
+#   filter(str_detect(en, "doctorate"))
+# characteristics%>% 
+#   filter(str_detect(en, "Population")) 
+# #Filter meta data for those two characteristics and store in vars
+# characteristics %>% 
+#   filter(ID==2013|ID==371|ID==1)->vars
+# vars
+# vars %>% 
+#   mutate(ID=as.numeric(ID))->vars
+# vars
+# dguids<-northern_da_in %>% 
+#   pull(DGUID)
+# #Break up dguids into alist of 10
+# dguids[1:2] %>% 
+#   map(., ~get_statcan_wds_data(., members=1,refresh=T))
+# dguids[1:2] %>% 
+#   map_vec(., ~get_statcan_wds_data(DGUIDS=., members=as.numeric(vars$ID)))
+# northern_da_data<-get_statcan_wds_data(DGUIDs=dguids[1:700], members=as.numeric(vars$ID), refresh=T)
+# get_statcan_wds_data(DGUIDs="2013A000459021",level="FED")
 #Take the full list of Canadian dissemination areas
+names(northern_da_in)
+#names(canada_das)
+# northern_da_in %>% 
+#   left_join(canada_das, by="DGUID")->northern_da_in
+# northern_da_overlap %>% 
+#   left_join(canada_das, by="DGUID")->northern_da_overlap
+
+# names(canada_das)
+# northern_da_in$DGUID
+# canada_das %>% 
+#   select(DGUID) %>% 
+#   slice_sample(n=20) 
+#   ?left_join
 canada_das %>% 
+  #filter(., DGUID %in% northern_da_in$DGUID) %>% 
+  filter(., CHARACTERISTIC_ID==1|CHARACTERISTIC_ID==397|CHARACTERISTIC_ID==2013) %>% 
   #and keep only those that appear in the list of northern ontario dissemination areas
   #gathered from the spatial merge above
-  filter(.$ALT_GEO_CODE %in% northern_da_in$DAUID) %>% 
+  inner_join(., northern_da_in, by="DGUID") %>% 
   #list_rbind() %>% 
   #filter the rows that include population mother tongue in French, and earned doctorates
-  filter(., CHARACTERISTIC_ID==1|CHARACTERISTIC_ID==397|CHARACTERISTIC_ID==2013) %>% 
   #rename ALT_GEO_CODE to be DAUID to match thevariable name in northern_da_in that comes from the
   #list of northern ontario dissemination areas figured northern_da_in rom the spatial join above 
-  select(DAUID=ALT_GEO_CODE, CHARACTERISTIC_ID, CHARACTERISTIC_NAME, C1_COUNT_TOTAL)->northern_das
+  select(DGUID, CHARACTERISTIC_ID, CHARACTERISTIC_NAME, C1_COUNT_TOTAL)->northern_da_in
+canada_das %>% 
+  filter(nchar(ALT_GEO_CODE)==17)->canada_das
+names(northern_da_overlap)
+canada_das %>% 
+  filter(., DGUID %in% northern_da_overlap$DGUID) %>% 
+  filter(., CHARACTERISTIC_ID==1|CHARACTERISTIC_ID==397|CHARACTERISTIC_ID==2013) %>% 
+  #and keep only those that appear in the list of northern ontario dissemination areas
+  #gathered from the spatial merge above
+  left_join(., northern_da_overlap, by="DGUID") %>% 
+  #list_rbind() %>% 
+  #filter the rows that include population mother tongue in French, and earned doctorates
+  #rename ALT_GEO_CODE to be DAUID to match thevariable name in northern_da_in that comes from the
+  #list of northern ontario dissemination areas figured northern_da_in rom the spatial join above 
+  select(DGUID, CHARACTERISTIC_ID, CHARACTERISTIC_NAME, C1_COUNT_TOTAL)->northern_da_overlap
+canada_das %>% 
+  slice(16) %>% 
+  select(DGUID)
+northern_da_overlap %>% 
+  filter(DGUID=="2021A000011124")
+
+canada_das %>% 
+  slice(1) %>% 
+  select(ALT_GEO_CODE)
+#
+northern_da_overlap$category<-rep("Overlap", nrow(northern_da_overlap))
+northern_da_in$category<-rep("Within", nrow(northern_da_in))
+northern_da_overlap %>% 
+  bind_rows(northern_da_in)->northern_da
+northern_da %>% 
+  filter(DGUID=="2021S051235480200")
+northern_da %>% view()
+northern_da$C1_COUNT_TOTAL<-ifelse(is.na(northern_da$C1_COUNT_TOTAL), 0, northern_da$C1_COUNT_TOTAL)
+northern_da %>% 
+  pivot_wider(., names_from=3, values_from = 4, id_cols=c(DGUID))->northern_da
+northern_da
+?pivot_wider
 # view(northern_das)
 # names(northern_das)
 # view(northern_da_in)
