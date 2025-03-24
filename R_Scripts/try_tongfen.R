@@ -12,19 +12,19 @@ set_cancensus_cache_path(here("data/statscan"))
 #das<-get_statcan_geographies(regions=list(PR="35"), level="DB", census_year="2021", type="digital")
 db<-get_census(regions=list(PR="35"), level="DB", dataset="CA21")
 #db_geometry<-get_statcan_geo_suite(level="DB", census_year="2021")
-#This is the URL of dissemination block geometries
-db_url<-"https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/ldb_000b21a_e.zip"
-#tempfile 
-tmp<-tempfile()
-#specify directory to extract the zip contents to 
-outdir<-file.path(here("data/statscan_db/"))
-#Increase timeout
-getOption("timeout")
-options(timeout = max(300, getOption("timeout")))
-getOption("timeout")
-#download the url to the temp file 
-download.file(url=db_url, destfile=tmp, mode="wb")
-unzip(tmp, exdir=outdir)
+# #This is the URL of dissemination block geometries
+# db_url<-"https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/ldb_000b21a_e.zip"
+# #tempfile 
+# tmp<-tempfile()
+# #specify directory to extract the zip contents to 
+# outdir<-file.path(here("data/statscan_db/"))
+# #Increase timeout
+# getOption("timeout")
+# options(timeout = max(300, getOption("timeout")))
+# getOption("timeout")
+# #download the url to the temp file 
+# download.file(url=db_url, destfile=tmp, mode="wb")
+# unzip(tmp, exdir=outdir)
 #read in dB geometries
 db_geometry<-st_read(dsn=here("data/statscan_db/"))
 #Filter ontario dissemination blocks
@@ -89,7 +89,30 @@ northern$geometry<-st_transform(northern$geometry, crs=st_crs(db_population_geom
 #one row per candidate
 northern<-ungroup(northern)
 
+northern<-st_sf(northern)
+db_population_geometry<-st_sf(db_population_geometry)
 #Try tongfen 
-error1<-estimate_tongfen_correspondence(list(db_population_geometry,northern), 
-                                        c("GeoUID","ElectoralDistrictNumber"))
+error1<-estimate_tongfen_correspondence(list(northern, db_population_geometry), 
+                                        c("ElectoralDistrictNumber","GeoUID"))
+head(error1)
+names(northern)
+head(db)
+head(northern)
+northern$Population
+db$Population
+#remove commas
+northern$Population<-str_remove_all(northern$Population, ",")
+northern$Population<-as.numeric(northern$Population)
 
+error1 %>% 
+  left_join(., db, by="GeoUID") %>% 
+  group_by(ElectoralDistrictNumber) %>% 
+  summarise(n=sum(Population)) %>% 
+  left_join(., northern) %>% 
+  mutate(error_percent=(n-Population)/Population) ->errors
+errors %>% 
+  ggplot(., aes(y=as.factor(ElectoralDistrictName), x=error_percent))+geom_col()
+errors %>% 
+  filter(abs(error_percent)>0.05)
+
+check_tongfen_areas(list(northern, db_population_geometry), error1)
