@@ -6,7 +6,10 @@ library(tidyverse)
 #install.packages("vroom")
 library(vroom)
 library(cancensus)
+#?set_cancensus_path
 
+#set_cancensus_api_key(key="CensusMapper_e0bb5e9bb16c197f306a580284d35b5b", overwrite=T, install=T)
+set_cancensus_cache_path(cache_path=here("data/statscan_geography_profiles/"))
 #read in the electoral districts boundary files
 ontario<-read_sf(here("data/electoral_districts/"))
 ontario
@@ -14,20 +17,28 @@ ontario
 #ontario %>% ggplot()+geom_sf()
 #Load dissemination areas
 #read in Statscan Dissemination Boundary files
-das<-get_statcan_geographies(level="DA", census_year="2021")
+#das<-get_statcan_geographies(level="DA", census_year="2021")
 #Sys.getenv()
-#set_cancensus_api_key("CensusMapper_e0bb5e9bb16c197f306a580284d35b5b", install = TRUE)
-#das<-get_census("CA21", regions=list(PR="35"), level='DA', vectors=c("v_CA21_1","v_CA21_1186","v_CA21_5862"), geo_format='sf', labels='short')
-
-#das<-read_sf(here("data/statscan_dsa/data"))
+library(cancensus)
+library(here)
+# #das<-get_census("CA21", regions=list(PR="35"), level='CMA', vectors=c("v_CA21_1","v_CA21_1186","v_CA21_907","v_CA21_5862"), geo_format='sf', labels='short')
+# set_cancensus_api_key(key="CensusMapper_e0bb5e9bb16c197f306a580284d35b5b", install=T, overwrite=T)
+# set_cancensus_cache_path(cache_path=here("data/statscan_geography_profiles"))
+# census_data <- get_census(dataset='CA21', regions=list(PR="35"), 
+#                           #vectors=c("v_CA21_1186","v_CA21_907","v_CA21_5862"), 
+#                           labels="detailed", geo_format='sf', level='DA')
+# list_recalled_cached_data()
+# remove_recalled_cached_data()
+# ?get_census
+das<-read_sf(here("data/statscan_dsa/data"))
 #checks
 head(das)
 names(das)
 glimpse(das)
 #Filter northern_da_in non-Ontario dissemination Areas
 #StatsCan provincial code for ONtairo is 35
-das %>% 
-  filter(PRUID=="35")->das
+# das %>% 
+#   filter(PRUID=="35")->das
 #Defining northern ridings
 northern_ridings <- c("Algoma—Manitoulin", "Kiiwetinoong", "Kenora—Rainy River", "Mushkegowuk—James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay—Atikokan", "Thunder Bay—Superior North", "Timiskaming—Cochrane", "Timmins")
 #check
@@ -42,6 +53,7 @@ st_crs(das)
 ontario<-st_transform(ontario, crs=st_crs(das))
 #Now to merge the two
 #Start with the statscan DAS
+names(das)
 das %>% 
   #Join them to the Ontario ridings 
   #We want to 
