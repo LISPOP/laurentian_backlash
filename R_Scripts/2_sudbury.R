@@ -1,3 +1,6 @@
+library(dplyr)
+library(ggplot2)
+
 source("R_Scripts/1_data_import.R")
 on %>% 
   filter(Party=="PC") %>% 
@@ -23,35 +26,28 @@ on %>%
   ggplot(., aes(x=as.factor(Date), y=Percent, col=Sudbury))+geom_point()+scale_color_manual(values=c("lightgrey", "darkred"))+
   geom_smooth(method="lm")+geom_jitter()
 
-install.packages("kableExtra")
+#Defining northern ridings
+northern_ridings <- c("Algoma--Manitoulin", "Kiiwetinoong", "Kenora--Rainy River", "Mushkegowuk--James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay--Atikokan", "Thunder Bay--Superior North", "Timiskaming--Cochrane", "Timmins", "Parry Sound--Muskoka")
 
-# Load necessary libraries
+#Creating dummy variable
+
 library(dplyr)
-library(stringr)
 
-# Load data
-source("R_Scripts/1_data_import.R")
+on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
 
-# Filter for PC party and calculate Delta
-on <- on %>%
-  filter(Party == "PC") %>%
-  arrange(ElectoralDistrictName, Election) %>%
-  mutate(Delta = Percent - lag(Percent, n = 1))
+#Results
+table(on$northern)
+names(on)
+library(dplyr)
+on %>%
+  group_by(northern) %>%
+  summarise(avg_vote = mean(Percent, na.rm = TRUE))
 
-# List of Northern ridings
-northern_ridings <- c("Sudbury", "Thunder Bay-Atikokan", "Thunder Bay-Superior North", 
-                      "Timmins", "Kenora-Rainy River", "Mushkegowuk-James Bay", "Algoma-Manitoulin")
 
-# Create ONE dummy variable for Northern ridings
-on <- on %>%
-  mutate(northern = ifelse(str_detect(ElectoralDistrictName, paste(northern_ridings, collapse = "|")), 1, 0))
+#Calculate change in vote share
+on %>%
+  dplyr::filter(Date > 2019) %>%
+  group_by(northern) %>%
+  summarise(avg_change = mean(Delta, na.rm = TRUE))
 
-# Check that the dummy variable was created correctly
-table(on$northern)  # Should show counts of 0s and 1s
-
-# Run regression model using the single northern dummy variable
-mod1 <- lm(Percent ~ Date + northern, data = on)
-
-# View model summary
-summary(mod1)
 

@@ -12,6 +12,12 @@ library(kableExtra)
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
 
+#Replacing hyphenated dashes
+on18 <- on18 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
+on22 <- on22 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
 
 #bind_rows
 on <- bind_rows(on18, on22)
@@ -19,15 +25,16 @@ on <- bind_rows(on18, on22)
 glimpse(on18)
 glimpse(on22)
 glimpse(on)
+on$ElectoralDistrictName
 
-
+source("R_Scripts/1a_scrape_PED_population.R")
 
 #Let's save that
 on %>%
-#Still form our gorups
-group_by(ElectoralDistrictNumber) %>% 
-#Here instead of summarize, we mutate the dataframe enroll
-mutate(n=sum(TotalValidBallotsCast))->on
+  #Still form our gorups
+  group_by(ElectoralDistrictNumber) %>% 
+  #Here instead of summarize, we mutate the dataframe enroll
+  mutate(n=sum(TotalValidBallotsCast))->on
 #Check
 on
 #This code creates the variable mv 
@@ -35,7 +42,7 @@ on
 #It is effectively a measure of how large the victory was as a percentage of the total ballots cast
 
 on %>%
-mutate(mv=Plurality/n)->on
+  mutate(mv=Plurality/n)->on
 
 library(dplyr)
 # This code excludes byelections
@@ -85,51 +92,8 @@ on %>%
     str_detect(Election, "2022")~2022
   ))->on
 
-<<<<<<< HEAD
-#Check it out
-#Look for the variable Winner
-view(on)
-
-#Then we repeat to find the Second place candidate
-#Always start with the data frame you are working with
-on %>% 
-  #Now, we want to work on the groups made by election and by electoral district number
-group_by(ElectoralDistrictNumber, Election) %>%
-  #This is different
-  #First we have to arrange the data frame in descending number of votes
-  arrange(desc(Votes), .by_group=T) %>% 
-  #Then we slice the second row, get it, the second place candidate
-  #This is like a cousin of slice_max and slice_min
-slice(2) %>% 
-  #select the name of candidates and the party and dump it into second_place
-  select(Party) ->second_place
-second_place
-#And we repeat the code above
-second_place %>% 
-  ungroup %>% 
-  mutate(Second=case_when(
-    !is.na(Party)~Party
-  )) %>% 
-  select(-Party) %>% 
-  right_join(., on) ->on
-
-on %>% filter(ElectoralDistrictNumber==1) %>% view()
-
-#Now we can easily combine those two.
-on %>% 
-  unite(., Race, c(Winner, Second), sep="-", remove=F)->on
-#check
-
-on$Race
-#Filter out rows where mv is 0
-
-on_filtered <- on %>% filter(mv !=0)
-
-
-=======
 #Filter PCs
 on
->>>>>>> origin/main
 
 library(dplyr)
 
@@ -226,4 +190,3 @@ table(is.na(on$ALT_GEO_CODE))
 
 # View merged data
 head(on)
-

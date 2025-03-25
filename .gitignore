@@ -1,5 +1,5 @@
-data/Electoral District Shapefile - 2022 General Election/
-data/statscan_dsa/
+data/poll_boundaries/
+.DS_Store
 
 # History files
 .Rhistory
