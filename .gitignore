@@ -1,5 +1,7 @@
 data/poll_boundaries/
 .DS_Store
+data/statscan_da/
+data/statscan_db/
 
 # History files
 .Rhistory
