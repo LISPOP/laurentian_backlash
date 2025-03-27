@@ -10,42 +10,47 @@ library(here)
 set_cancensus_cache_path(here("data/statscan"))
 #list_census_regions(dataset="CA21", use_cache = TRUE, quiet = FALSE) %>% view()
 #das<-get_statcan_geographies(regions=list(PR="35"), level="DB", census_year="2021", type="digital")
+#Get population for dissemination blocks
 db<-get_census(regions=list(PR="35"), level="DB", dataset="CA21")
+head(db)
 #db_geometry<-get_statcan_geo_suite(level="DB", census_year="2021")
 # #This is the URL of dissemination block geometries
-# db_url<-"https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/ldb_000b21a_e.zip"
-# #tempfile 
-# tmp<-tempfile()
-# #specify directory to extract the zip contents to 
-# outdir<-file.path(here("data/statscan_db/"))
-# #Increase timeout
-# getOption("timeout")
-# options(timeout = max(300, getOption("timeout")))
-# getOption("timeout")
-# #download the url to the temp file 
-# download.file(url=db_url, destfile=tmp, mode="wb")
-# unzip(tmp, exdir=outdir)
+db_url<-"https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/ldb_000b21a_e.zip"
+#tempfile
+tmp<-tempfile()
+#specify directory to extract the zip contents to
+outdir<-file.path(here("data/statscan_db/"))
+#Increase timeout
+getOption("timeout")
+options(timeout = max(300, getOption("timeout")))
+getOption("timeout")
+#download the url to the temp file
+download.file(url=db_url, destfile=tmp)
+unzip(tmp, exdir=outdir)
 #read in dB geometries
 db_geometry<-st_read(dsn=here("data/statscan_db/"))
 #Filter ontario dissemination blocks
 names(db_geometry)
 db_geometry %>% 
-  filter(PRUID=="35")->db_geometry_ontario
-
+  filter(PRUID=="35")->db_geometry
+#Get DAUID for each DB
+db_geometry$DA_UID<-str_sub(db_geometry$DGUID, 9, 17)
+head(db_geometry)
 #Merge the population counts with the geometry files
 names(db)
-names(db_geometry_ontario)
-db %>% 
-  left_join(., db_geometry_ontario, by=c("GeoUID"="DBUID"))->db_population_geometry
-head(db_population_geometry)
-# das %>% 
-#   filter(PRUID=="35")->das
+names(db_geometry)
+# db %>% 
+#   left_join(., db_geometry_ontario, by=c("GeoUID"="DBUID"))->db_population_geometry
+# head(db_population_geometry)
+
+
 #read in the electoral districts boundary files
 ontario<-read_sf(here("data/electoral_districts/"))
 names(ontario)
 #Replace long hyphens with double-dashes for uniformity. Fuck this is frustrating. 
 ontario %>% 
   mutate(ENGLISH_NA = str_replace_all(ENGLISH_NA, "—", "--"))->ontario
+
 names(ontario)
 #Get population Counts
 # by calling the scxript that reads in Ontario election results
@@ -58,7 +63,7 @@ names(ontario)
 names(on)
 #Take on that has ED numbers, Population and District names and results
 on %>% 
-  select(c("ElectoralDistrictNumber", "Population", "ElectoralDistrictName")) %>% 
+  select(c("ElectoralDistrictNumber", "ElectoralDistrictName")) %>% 
   #Select distinct rows 
   # Because the data frame has multiple rows per district
   #one row per candidate
@@ -76,43 +81,109 @@ ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
 ontario %>% 
   filter(northern==1)->northern
 northern
+#Add in population
+northern$Population<-c(70504,
+                       51856,
+                       28991,
+                       25366,
+                       85430,
+                       76507, 
+                       104509,
+                       72051,
+                       84527,
+                       76324,
+                       70775,
+                       67158,
+                       41145)
 #Check the projection systems for each
 #st_crs(ontario)
 #st_crs()
 st_crs(northern$geometry)
 names(db)
-db_population_geometry
+
 #Transform the ontario projection system to match Statistics Canadas
-db_population_geometry
-northern$geometry<-st_transform(northern$geometry, crs=st_crs(db_population_geometry$geometry))
+northern$geometry<-st_transform(northern$geometry, crs=st_crs(db_geometry$geometry))
 #ungroup northern; this is a hold-over from when on had the election results
 #one row per candidate
 northern<-ungroup(northern)
 
 northern<-st_sf(northern)
-db_population_geometry<-st_sf(db_population_geometry)
-#Try tongfen 
-error1<-estimate_tongfen_correspondence(list(northern, db_population_geometry), 
-                                        c("ElectoralDistrictNumber","GeoUID"))
-head(error1)
-names(northern)
-head(db)
-head(northern)
-northern$Population
-db$Population
-#remove commas
-northern$Population<-str_remove_all(northern$Population, ",")
-northern$Population<-as.numeric(northern$Population)
+db_geometry<-st_sf(db_geometry)
+names(db_geometry)
+names(db)
 
+#Try tongfen 
+error1<-estimate_tongfen_correspondence(list(northern, db_geometry), 
+                                        c("ElectoralDistrictNumber","DBUID"))
+
+error1
+names(db)
+names(error1)
+head(error1)
+head(db)
+#Grouping Dissemination blocks into Provincial districts 
 error1 %>% 
-  left_join(., db, by="GeoUID") %>% 
+  left_join(., db, by=c("DBUID"="GeoUID")) %>% 
   group_by(ElectoralDistrictNumber) %>% 
   summarise(n=sum(Population)) %>% 
   left_join(., northern) %>% 
   mutate(error_percent=(n-Population)/Population) ->errors
 errors %>% 
-  ggplot(., aes(y=as.factor(ElectoralDistrictName), x=error_percent))+geom_col()
-errors %>% 
-  filter(abs(error_percent)>0.05)
+  ggplot(., aes(y=fct_reorder(as.factor(ElectoralDistrictName), error_percent), x=error_percent))+
+  geom_col()+labs(y="Ontario Electoral District", 
+ title="Diagnosing Tongfen Estimates Aggregating Dissemination Block Population Counts To Ontario Provincial Electoral Districts",
+x="Percent Discrepancy Between Tongfen and Ontario Voter Information Service")
 
-check_tongfen_areas(list(northern, db_population_geometry), error1)
+
+#### Read in Dissemination Area boundaries
+#### NOTE: 
+library(cancensus)
+
+da_url<-'https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/lda_000a21a_e.zip'
+tmp<-tempfile()
+outdir<-file.path(here("data/statscan_da"))
+download.file(url=da_url, destfile=tmp)
+unzip(tmp, exdir=outdir)
+
+#da_geometry<-get_census("CA21", regions=list(PR="35"),level="DA",geo_format="sf")
+da_geometry<-st_read(here('data/statscan_da'))
+da_geometry %>% 
+  filter(PRUID=="35")->da_geometry
+
+#da_geometry<-st_read(here("data/statscan_da/"))
+
+#unlink(tmp)
+#Filter DA for ontario
+
+#Reduce the ontario dissemination areas to match the northern districts boundaries
+da_geometry<-st_crop(da_geometry, xmin=5961670,ymin=1047215,xmax=7270305,ymax=2296575)
+#Reduce the dissemination block categories
+db_geometry<-st_crop(db_geometry, xmin=5961670,ymin=1047215,xmax=7270305,ymax=2296575)
+
+#vars<-"v_CA21_1186"
+
+meta<-meta_for_additive_variables("CA21", "Population")
+meta$downsample<-c("Population")
+#set_cancensus_api_key(key="CensusMapper_287500bb91a374ec69fdcf270fb20ff7")
+#Sys.getenv()
+northern %>% 
+  filter(ElectoralDistrictNumber==105|ElectoralDistrictNumber==106)->thunder_bay
+thunder_bay_tongfen<-tongfen_estimate_ca_census(st_sf(thunder_bay$geometry),  
+                                                meta=meta,level="DA", 
+                                                downsample_level = "DB")
+
+thunder_bay %>% 
+  select(2,Population)
+thunder_bay_tongfen
+db_geometry %>% 
+st_filter(., thunder_bay, .predicates=st_intersects)->thunder_bay_db
+thunder_bay %>% 
+  ggplot(., )+geom_sf(col="darkred", linewidth=1)+
+  geom_sf(data=thunder_bay_db, linetype=2, col="darkblue", fill=NA)+theme_minimal()
+
+### st_filter is very useful
+
+northern_tongfen<-tongfen_estimate_ca_census(northern$geometry,  meta=meta,level="DA", downsample_level = "DB")
+northern_tongfen
+
+#This gets the count of French speakers 
