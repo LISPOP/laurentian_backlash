@@ -105,19 +105,9 @@ ontario %>%
   filter(northern==1)->northern
 northern
 #Add in population
-northern$Population<-c(70504,
-                       51856,
-                       28991,
-                       25366,
-                       85430,
-                       76507, 
-                       104509,
-                       72051,
-                       84527,
-                       76324,
-                       70775,
-                       67158,
-                       41145)
+source("R_Scripts/2_get_northern_populations.R")
+northern %>% 
+  left_join(., northern_population) -> northern
 #Check the projection systems for each
 #st_crs(ontario)
 #st_crs()
@@ -132,38 +122,132 @@ northern<-ungroup(northern)
 #### Method 1 - Simon's way 
 
 # Put DAs into provincial districts
-names(da)
-names(da_geometry)
-head(da)
+# First add Population variable to the geometry data frame
 da %>% 
   select(GeoUID, Population) %>% 
   left_join(da_geometry, by=c("GeoUID"="DAUID"))->da_geometry
-
-
 
 # Join da geometry to the northern boundary files using st_within
 st_sf(da_geometry) %>% 
   #If a da is within a provincial district, it is kept.
   st_join(., st_sf(northern), join=st_within, left=F)->northern_da_within
+#Now join da_geometry to the northern boundary files using st_touches.
+# This is going to pull any DAs that *overlap* but are not *within* a district. 
+
+st_sf(da_geometry) %>% 
+  st_join(., st_sf(northern), join=st_overlaps, left=F)->northern_da_overlap
+
+# Check if any DAs that overlap PEDS also show up in the
+# within data frame
+northern_da_overlap %>% 
+  filter(GeoUID %in% northern_da_within$GeoUID)
+
 
 #Check
 ggplot(data=northern)+geom_sf(linewidth=1, col="darkred", fill=NA)+
   geom_sf(data=northern_da_within, fill="lightgrey", col="black", linetype=2)+
   labs(title="Northern Ontario DAs wholly within Northern ONtario Districts")+theme_minimal()
 
+#Check
+ggplot(data=northern)+geom_sf(linewidth=1, col="darkred", fill=NA)+
+  geom_sf(data=northern_da_overlap, fill="lightgrey", col="black", linetype=2)+
+  labs(title="Northern Ontario DAs wholly within Northern ONtario Districts")+theme_minimal()
+
 #Calculate ERrors 
 northern_da_within %>% group_by(ENGLISH_NA, Population.y) %>% 
   summarise(Population_hat=sum(Population.x)) %>% 
   mutate(error_pct=((Population_hat-Population.y)/Population.y)) %>% 
-  ggplot(., aes(y=fct_reorder(ENGLISH_NA, error_pct), x=error_pct))+geom_col()
+  ggplot(., aes(y=fct_reorder(ENGLISH_NA, error_pct), x=error_pct))+geom_col()+
+  labs(title="Errors in Estimating PRovincial District POpulation from using DAs\nthat fit only in PEDs")
 
-#### Try tongfen
+# In the end, this metric is not that useful. Of course the errors are 
+# off. They are all showing negative errors, because we are purposefully
+# excluding a whole bunch of DAs. The issue is whether the DAs that are excluded
+# are systematically different than the DAs that are included. 
+# I could try to get some metrics on DAs (e.g. francophones, income, doctoraotes)
+# and see correlations in the st_within and the st_overlap data frames. 
+#Vectors of interest
 
 
+vectors=["v_CA21_1186","v_CA21_386","v_CA21_5910","v_CA21_915"]
+vars<-c("Francophone"="v_CA21_1186",
+        'doctorate'="v_CA21_5910", 'age'="v_CA21_386", 'income'="v_CA21_915")
+vars
+da_vars<-get_census(dataset="CA21", regions=list(PR="35"), vectors=vars, geo_format=NA, level="DA")
+da_vars %>% 
+  filter(GeoUID %in% northern_da_overlap$GeoUID)->northern_da_overlap_vars
+da_vars %>% 
+  filter(GeoUID %in% northern_da_within$GeoUID)->northern_da_within_vars
+northern_da_overlap_vars$DA_set<-rep("Overlap", nrow(northern_da_overlap_vars))
+northern_da_within_vars$DA_set<-rep("Within", nrow(northern_da_within_vars))
+cor(northern_da_within_vars$`v_CA21_1186: French`, northern_da_overlap_vars$`v_CA21_1186: French`)
+northern_da_overlap_vars %>% 
+  bind_rows(., northern_da_within_vars) %>% 
+  rename(French=12, Doctorate=13, Age=14, Income=15) ->northern_da_vars 
+ # pivot_longer(French:Income) %>% 
+northern_da_vars %>% 
+group_by(DA_set) %>% 
+  summarise(Average=mean(Income, na.rm=T))
+
+northern_da_vars %>% 
+  group_by(DA_set) %>% 
+  summarise(Average=mean(French, na.rm=T))
+
+northern_da_vars %>% 
+  group_by(DA_set) %>% 
+  summarise(Average=mean(Doctorate, na.rm=T))
+
+
+#### Try Jens's strategy of tongfen 
+#Let's just do the Thunder Bay ridings
+northern %>% 
+  filter(str_detect(ENGLISH_NA, pattern="Thunder"))->thunder_bay
+thunder_bay %>% 
+  ggplot()+geom_sf()
+#Get metadata for population
 meta<-meta_for_additive_variables("CA21", variables=c("Population"))
 set_cancensus_api_key(key="CensusMapper_287500bb91a374ec69fdcf270fb20ff7")
-northern_da_tongfen<-tongfen_estimate_ca_census(northern, level="DA", meta=meta)
-northern_da_tongfen %>% view()
+set_cancensus_api_key("CensusMapper_e0bb5e9bb16c197f306a580284d35b5b")
+thunder_bay_da_tongfen<-tongfen_estimate_ca_census(thunder_bay, level="DA", meta=meta)
+
+thunder_bay_da_tongfen
+#Calculate Percent Error
+thunder_bay_da_tongfen %>% 
+  mutate(error_pct=(Population_CA21-Population)/Population) %>%view()
+#that is a goddamn very small error.
+
+# Try to do it for the other variables
+meta_vars<-meta_for_ca_census_vectors(vectors=vars)
+thunder_bay_da_tongfen2<-tongfen_estimate_ca_census(thunder_bay, level="DA", meta=meta_vars, na.rm=T)
+thunder_bay_da_tongfen2 %>% view()
+
+###  Try downsampling
+meta$downsample<-c("Population") 
+meta_vars
+### HAVE I DONE THIS RIGHT
+### This returns an error of duplicated name "Population"
+thunder_bay_da_tongfen<-tongfen_estimate_ca_census(thunder_bay, 
+                                                   level="DA", meta=meta, 
+                                                   downsample_level="DB")
+#Try with the non-Population variables
+meta_vars$downsample<-rep("Population", nrow(meta_vars))
+thunder_bay_db_tongfen2<-tongfen_estimate_ca_census(thunder_bay, 
+                                                   level="DA", meta=meta_vars, 
+                                                   downsample_level="DB", na.rm=T)
+#Combine results to compare
+
+thunder_bay_db_tongfen2$Method<-rep("Downsample", 2)
+thunder_bay_da_tongfen2$Method<-rep("Tongfen", 2)
+thunder_bay_da_tongfen2 %>% 
+  bind_rows(thunder_bay_db_tongfen2) %>% 
+  select(ENGLISH_NA, Francophone:Method, -geometry) %>% 
+  st_drop_geometry() %>% 
+  pivot_longer(Francophone:income) %>% 
+  select(-c(2:3)) %>% 
+ # mutate(row = row_number()) %>%
+  pivot_wider(.,  names_from=c(Method), values_from = c(value)) 
+
+#northern_da_tongfen %>% view()
 # # northern<-st_sf(northern)
 # # db_geometry<-st_sf(db_geometry)
 # names(db_geometry)
@@ -192,18 +276,12 @@ northern_da_tongfen %>% view()
 # x="Percent Discrepancy Between Tongfen and Ontario Voter Information Service")
 # 
 # 
-# 
-# 
-# #Reduce the ontario dissemination areas to match the northern districts boundaries
-# da_geometry<-st_crop(da_geometry, xmin=5961670,ymin=1047215,xmax=7270305,ymax=2296575)
-# #Reduce the dissemination block categories
-# db_geometry<-st_crop(db_geometry, xmin=5961670,ymin=1047215,xmax=7270305,ymax=2296575)
+#
 # 
 # #vars<-"v_CA21_1186"
 # 
 # meta<-meta_for_additive_variables("CA21", "Population")
 # meta$downsample<-c("Population")
-# #Sys.getenv()
 # northern %>% 
 #   filter(ElectoralDistrictNumber==105|ElectoralDistrictNumber==106)->thunder_bay
 # thunder_bay_tongfen<-tongfen_estimate_ca_census(st_sf(thunder_bay$geometry),  
@@ -221,10 +299,4 @@ northern_da_tongfen %>% view()
 # 
 # ### st_filter is very useful
 # 
-# northern_tongfen<-tongfen_estimate_ca_census(northern$geometry,  
-#                                              meta=meta,
-#                                              level="DA", downsample_level = "DB")
-# northern_tongfen
-# 
-# #This gets the count of French speakers 
-# Sys.getenv()
+
