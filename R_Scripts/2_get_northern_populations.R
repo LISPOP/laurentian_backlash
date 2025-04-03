@@ -1,4 +1,4 @@
-
+#source("R_Scripts/1_data_import.R")
 base_url<-'https://voterinformationservice.elections.on.ca/en/electoral-district/'
 urls<-paste(base_url, northern$ED_ID, "-", northern$ENGLISH_NA, sep="")
 urls
