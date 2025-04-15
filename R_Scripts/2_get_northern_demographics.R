@@ -46,7 +46,8 @@ northern_tongfen %>%
 vars<-c("francophones"="v_CA21_1186",
         'phds'="v_CA21_5910" ,
         'age'="v_CA21_386", 
-        'income'="v_CA21_915")
+        'income'="v_CA21_915", 
+        'density'='v_CA21_6')
 meta_vars<-meta_for_ca_census_vectors(vectors=vars)
 meta_vars
 #Now get the census data for the demographic varirables

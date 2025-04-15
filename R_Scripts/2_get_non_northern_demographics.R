@@ -31,18 +31,26 @@ fed_on_meta %>%
   filter(str_detect(en, "French"))
 fed_on_meta %>% 
   filter(`Codelist en`=="Characteristic") %>% 
-  filter(str_detect(en, "income")) %>% view()
+  filter(str_detect(en, "income")) 
 
 fed_on_meta %>% 
   filter(`Codelist en`=="Characteristic") %>% 
-  filter(str_detect(en, "Average")) %>% view()
-
-
-# non_northern_dguid$ID %>% 
+  filter(str_detect(en, "Average")) 
+fed_on_meta %>% 
+  filter(`Codelist en`=="Characteristic") 
+# non_northern_dguid$ID %>%
+#   map(., function(x){
+#    # Sys.sleep(2)
+#     get_statcan_wds_data(DGUIDs=x, members=6, gender="Total", version="1.3", refresh=T)
+#     }) %>%
+#   list_rbind()->density
+# 
+# save(density, file=here("data/non_northern_density.rds"))
+# non_northern_dguid$ID %>%
 #   map(., function(x){
 #    # Sys.sleep(2)
 #     get_statcan_wds_data(DGUIDs=x, members=371, gender="Total", version="1.3")
-#     }) %>% 
+#     }) %>%
 #   list_rbind()->french
 # 
 # save(french, file=here("data/non_northern_francophones.rds"))
