@@ -48,6 +48,6 @@ on %>%
 #Which ridings are the most francophone
 on %>% 
   distinct(ElectoralDistrictName, francophones_pct) %>% 
-  slice_max(francophones_pct, n=10) %>% view()
+  slice_max(francophones_pct, n=10) 
 
 #### The data frame here may need to be filtered to only include PC vote share depending on how you go forward
