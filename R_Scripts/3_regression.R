@@ -51,3 +51,9 @@ on %>%
   slice_max(francophones_pct, n=10) %>% view()
 
 #### The data frame here may need to be filtered to only include PC vote share depending on how you go forward
+
+pc <- on %>% 
+  filter(Party == "PC")
+
+
+
