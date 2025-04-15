@@ -257,4 +257,6 @@ northern_ridings <- c("Algoma--Manitoulin", "Kiiwetinoong", "Kenora--Rainy River
 length(northern_ridings) #should be 13
 #Creating dummy variable in the Ontario districts
 ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
-
+#Filter out northern ridings
+ontario %>% 
+  filter(northern==1)->northern

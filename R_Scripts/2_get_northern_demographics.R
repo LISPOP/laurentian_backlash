@@ -8,9 +8,7 @@ library(rvest)
 
 #set theme
 theme_set(theme_minimal())
-#Filter out northern ridings
-ontario %>% 
-  filter(northern==1)->northern
+
 northern
 #Add in population
 source("R_Scripts/2_get_northern_populations.R")
