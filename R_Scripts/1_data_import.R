@@ -16,7 +16,7 @@ library(rvest)
 library(cancensus)
 #set_cancensus_api_key('CensusMapper_287500bb91a374ec69fdcf270fb20ff7')
 set_cancensus_cache_path(cache_path = here("data/statscan"))
-#push
+
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
 
