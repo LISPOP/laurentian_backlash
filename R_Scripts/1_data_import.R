@@ -14,6 +14,7 @@ library(kableExtra)
 library(sf)
 library(rvest)
 library(cancensus)
+library(tongfen)
 #set_cancensus_api_key('CensusMapper_287500bb91a374ec69fdcf270fb20ff7')
 set_cancensus_cache_path(cache_path = here("data/statscan"))
 

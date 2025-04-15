@@ -1,10 +1,5 @@
 source("R_Scripts/1_data_import.R")
-library(tongfen)
-library(cancensus)
-library(tidyverse)
-library(sf)
-library(here)
-library(rvest)
+
 
 #set theme
 theme_set(theme_minimal())
