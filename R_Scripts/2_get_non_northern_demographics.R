@@ -24,20 +24,37 @@ head(fed_on)
 fed_on$ID
 fed_on %>% 
   filter(FED %in% non_northern$FED)->non_northern_dguid
-non_northern_dguid$ID
-#Look for income
-fed_on_meta %>% 
-  filter(`Codelist en`=="Characteristic") %>% 
-  filter(str_detect(en, "French"))
-fed_on_meta %>% 
-  filter(`Codelist en`=="Characteristic") %>% 
-  filter(str_detect(en, "income")) 
+# non_northern_dguid$ID
+# #Look for income
+# fed_on_meta %>% 
+#   filter(`Codelist en`=="Characteristic") %>% 
+#   filter(str_detect(en, "French"))
+# fed_on_meta %>% 
+#   filter(`Codelist en`=="Characteristic") %>% 
+#   filter(str_detect(en, "income")) 
+# 
+# fed_on_meta %>% 
+#   filter(`Codelist en`=="Characteristic") %>% 
+#   filter(str_detect(en, "Average")) 
+# 
+# 
+# # Density
+# density<-get_statcan_wds_data(DGUIDs=non_northern_dguid$ID, members=6, gender="Total", version="1.3")
+# #save(density, file=here("data/non_northern_density.rds"))
+# #Francophones
+# francophones<-get_statcan_wds_data(DGUIDs=non_northern_dguid$ID, members=371, gender="Total", version="1.3")
+# # Post-seconary
+# fed_on_meta %>% 
+#   filter(`Codelist en`=="Characteristic") %>% 
+#   filter(str_detect(en, "certificate")) %>% view()
+# # Income
+# average_hh_income<-get_statcan_wds_data(DGUIDs=non_northern_dguid$ID, members=238, gender="Total", version="1.3")
+# average_hh_income
+# #Average_age
+# average_age<-get_statcan_wds_data(DGUIDs=non_northern_dguid$ID, members=39, gender="Total", version="1.3")
+# #Phds
+# phds<-get_statcan_wds_data(DGUIDs=non_northern_dguid$ID, members=2013, gender="Total", version="1.3")
 
-fed_on_meta %>% 
-  filter(`Codelist en`=="Characteristic") %>% 
-  filter(str_detect(en, "Average")) 
-fed_on_meta %>% 
-  filter(`Codelist en`=="Characteristic") 
 # non_northern_dguid$ID %>%
 #   map(., function(x){
 #    # Sys.sleep(2)
@@ -83,20 +100,34 @@ load(here("data/non_northern_average_total_hh_income_2020.rds"))
 load(here("data/non_northern_phds.rds"))
 load(here("data/non_northern_francophones.rds"))
 load(here("data/non_northern_average_age.rds"))
-
-phds %>% 
+phds %>%
   bind_rows(., french, average_age, average_total_hh_income_2020)->non_northern_data
-
-non_northern_data %>% 
+non_northern_data
+non_northern_data %>%
   mutate(Variable=case_when(
-    CHARACTERISTIC==2013~"phds",
-    CHARACTERISTIC==39~"age",
-    CHARACTERISTIC==371~"francophones",
-    CHARACTERISTIC==238~"income"
+    CHARACTERISTIC==1670~"Visible",
+    CHARACTERISTIC==39~"Average Age",
+    CHARACTERISTIC==371~"Francophones",
+    CHARACTERISTIC==238~"Average_HH_Income",
+    CHARACTERISTIC==35~"Gini",
+    CHARACTERISTIC==2227~"Not Labour Force",
+    CHARACTERISTIC==2226~"Unemployed",
   ))->non_northern_data
-non_northern_data %>% 
-  select(Variable, Value=OBS_VALUE, DGUID=REF_AREA) %>% 
-  pivot_wider(., names_from=c("Variable"), values_from=c("Value")) %>% 
-  mutate(FED=str_sub(DGUID, -5))->non_northern_data
+# table(non_northern_data$CHARACTERISTIC_NAME)
 
+# 
+# non_northern_data %>% 
+#   mutate(Variable=case_when(
+#     CHARACTERISTIC==2013~"phds",
+#     CHARACTERISTIC==39~"age",
+#     CHARACTERISTIC==371~"francophones",
+#     CHARACTERISTIC==238~"income",
+#     CHARACTERISTIC==238~"income"
+#   ))->non_northern_data
+non_northern_data %>% 
+  select(CHARACTERISTIC_NAME,Value=OBS_VALUE, DGUID=REF_AREA) %>% 
+  pivot_wider(., names_from=c("CHARACTERISTIC_NAME"), values_from=c("Value")) %>% 
+  mutate(FED=str_sub(DGUID, -5)) %>% 
+  rename(`phds`=2, `francophones`=3, `age`=4, `income`=5)->non_northern_data
+non_northern_data
 
