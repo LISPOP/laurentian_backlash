@@ -35,7 +35,7 @@ da_geometry %>%
 northern %>% 
   rename(Population_source=Population)->northern
 northern_tongfen<-tongfen_estimate(target=northern, source=da_data, meta=meta, na.rm=T)
-view(northern_tongfen)
+
 #Calculate Error Percent
 northern_tongfen %>% 
   mutate(error_percent=(Population/Population_source)/Population_source) %>% 
@@ -47,7 +47,10 @@ vars<-c("francophones"="v_CA21_1186",
         'phds'="v_CA21_5910" ,
         'age'="v_CA21_386", 
         'income'="v_CA21_915", 
-        'density'='v_CA21_6')
+        'density'='v_CA21_6',
+        'mining'='v_CA21_6612',
+         'certificate'='v_CA21_5826', 
+        'first_nations'='v_CA21_4210')
 meta_vars<-meta_for_ca_census_vectors(vectors=vars)
 meta_vars
 #Now get the census data for the demographic varirables

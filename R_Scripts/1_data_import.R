@@ -1,7 +1,7 @@
 #packages to install
 #Uncomment and execute 
 
-list.of.packages<-c("tongfen", "cancensus", "here", "tidyverse", "sf", "rvest", "readxl", "knitr", "kableExtra")
+list.of.packages<-c("Synth", "SCtools","tongfen", "cancensus", "here", "tidyverse", "sf", "rvest", "readxl", "knitr", "kableExtra")
 #INstall if necessary
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -91,8 +91,7 @@ on %>%
 #Remember: AT this point we have one row for each candidate
 names(on)
 on %>% 
-  filter(., ElectoralDistrictNumber==124) %>% 
-  view()
+  filter(., ElectoralDistrictNumber==124) 
 on
 # Recode date
 on %>% 
@@ -246,10 +245,10 @@ on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
 
 #check
 on %>% 
-  filter(is.na(FED)) %>% view() 
+  filter(is.na(FED)) 
 #
 on %>% 
-  filter(northern==1) %>% view()
+  filter(northern==1) 
 #### Get Ontario Provincial Boundary files 
 ontario<-read_sf(here("data/electoral_districts/"))
 names(ontario)
