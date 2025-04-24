@@ -33,35 +33,35 @@ head(on)
 
 #We are now missing the non_northern_data
 # This was pulled directly from Statistics Canada in 2_get_non_northern_demographics.R
-#view(on)
-names(non_northern_data)
-names(on)
+#This drops a variable we don't need
 non_northern_data %>% 
   select(-DGUID)->non_northern_data
 
-
+#This renames teh population variable in `on` in order to match
+# the population variable in the non_northern data
 on %>% 
   rename(population=Population_source) %>% 
+  #This combines the `on` data with the non_northern data
   rows_patch(., non_northern_data, by=c("FED")) ->on
+#This drops a few variables
 on %>% 
   select(-IsGeneralElection, -ResignedMPPName)->on
+#This code is a check that our non_northern census data
+# matches what STatscan has published
 #Check 
 on %>% 
   filter(northern!=1) %>% 
   filter(ElectoralDistrictName=="Ajax")
 # https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/page.cfm?Lang=E&SearchText=ajax&DGUIDlist=2013A000435001&GENDERlist=1,2,3&STATISTIClist=1,4&HEADERlist=0
 
-#This line divides each demographic variable by population to get a percent
-names(on)
+#This code divides each demographic variable by population to get a percent
 on %>% 
-  #rename(Population=Population_source) %>% 
   mutate(across(c(francophones, phds, mining, certificate, first_nations), ~(.x/population), .names="{.col}_pct"))->on
 #Which ridings are the most francophone
 on %>% 
   distinct(ElectoralDistrictName, francophones_pct) %>% 
   slice_max(francophones_pct, n=10)
-on$mining
-on$mining
+
 #Which ridings are the most mining
 #Which ridings are the most francophone
 on %>% 
