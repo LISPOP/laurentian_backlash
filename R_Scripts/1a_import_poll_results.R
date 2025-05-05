@@ -63,4 +63,3 @@ on_poll_results %>%
 #str_detect(NameOfCandidates, "last_name_of_PC_candidate")~"PC",
 # TRUE~'Other'))->sudbury_poll_results
 
-))

@@ -14,11 +14,13 @@ northern %>%
 
 # Now get Statistics Canada Dissemination Boundary Files
 
-da_geometry<-get_statcan_geographies("2021", level="DA", type="digital")
+#da_geometry<-get_census(dataset="CA21", regions=list(PR="35"),level="DA",geo_format="sf")
+da_geometry<-get_statcan_geographies("2021", level="DA", type="digital", cache_path="data/statscan/geographies/digital/DA/")
+
 #Filter Ontario
-da_geometry %>% 
-  filter(PRUID=="35")->da_geometry
-names(da_geometry)
+da_geometry %>%
+ filter(PRUID=="35")->da_geometry
+
 
 #Get Population Counts for 
 meta<-meta_for_additive_variables("CA21", "Population")
