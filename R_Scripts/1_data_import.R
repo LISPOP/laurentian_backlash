@@ -15,9 +15,14 @@ library(sf)
 library(rvest)
 library(cancensus)
 library(tongfen)
-#set_cancensus_api_key('CensusMapper_287500bb91a374ec69fdcf270fb20ff7')
-set_cancensus_cache_path(cache_path = here("data/statscan"))
-
+#set_cancensus_api_key('', install=T)
+#Run this command to be sure your cancensus api key has been set
+#show_cancensus_api_key('')
+#To avoid difficulties with large file storage
+# set the cache_path to be OUTSIDE THIS PROJECT'S FOLDERS; I.E. SOMEWHERE ELSE ON YOUR HARD DRIVE
+#set_cancensus_cache_path(cache_path = "YOUR_OWN_FOLDER")
+#CHECK
+#show_cancensus_cache_path()
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
 

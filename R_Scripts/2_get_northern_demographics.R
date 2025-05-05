@@ -15,7 +15,7 @@ northern %>%
 # Now get Statistics Canada Dissemination Boundary Files
 
 #da_geometry<-get_census(dataset="CA21", regions=list(PR="35"),level="DA",geo_format="sf")
-da_geometry<-get_statcan_geographies("2021", level="DA", type="digital", cache_path="data/statscan/geographies/digital/DA/")
+da_geometry<-get_statcan_geographies("2021", level="DA", type="digital")
 
 #Filter Ontario
 da_geometry %>%
