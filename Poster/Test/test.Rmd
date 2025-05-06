@@ -7,6 +7,28 @@ date: "2025-04-24"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Introduction
+This is the introduction 
+
+### Sub-head
+
+This is my sub-head. 
+
+#### Fourth sub-head.
+
+You can add *italics* 
+
+You can ddd **bolding** .
+
+You can add a URL [my favourite website](http://www.theglobeandmail.com)
+
+
+```{r}
+library(tidyverse)
+data("mtcars")
+glimpse(mtcars)
+
+```
 
 ## R Markdown
 
@@ -15,7 +37,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r cars}
-summary(cars)
+summary(mtcars)
 ```
 
 ## Including Plots
@@ -33,6 +55,6 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 1. Write a paragraph of text about your hometown. Add some bolding and some italics.
 2. Add a code chunk to make a graph of something in the `mtcars` data set. Use the `ggplot` command. Load the `tidyverse` library
 3. Add a bulleted list of things you're going to do in the next little while like grocery shopping or whatever.
-4. Add a new section header with `##
+4. Add a new section header with `##`
 5.Go up to the `YAML` content section and change the output of the document from `html` to `pdf` 
 
