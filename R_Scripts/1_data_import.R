@@ -269,3 +269,4 @@ ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
 #Filter out northern ridings
 ontario %>% 
   filter(northern==1)->northern
+glimpse(northern)
