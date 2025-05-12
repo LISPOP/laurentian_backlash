@@ -39,7 +39,7 @@ pc %>%
 # neighbouring districts
 
 pc %>% 
-  filter(str_detect(ElectoralDistrictName, "Timmins|Nickel|Cochrane|Algoma")) %>% 
+  filter(northern==1) %>% 
   distinct(ElectoralDistrictName)->neighbours
 pc
 data_francophone<-dataprep(foo=pc, 

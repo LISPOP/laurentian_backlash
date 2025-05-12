@@ -25,8 +25,41 @@ library(tongfen)
 #show_cancensus_cache_path()
 on18 <- read_excel("data/on2018_results.xlsx")
 on22<- read_excel("data/on2022_results.xlsx")
-
+names(on18)
+#Get Ontario 14
+on14<-read.csv(file="https://results.elections.on.ca/api/report-groups/2/report-outputs/488/csv")
+on14 %>% 
+  filter(IsGeneralElection==1)->on14
+# Get on 11
+on11<-read.csv(file="https://results.elections.on.ca/api/report-groups/3/report-outputs/499/csv")
+on11 %>% 
+  filter(IsGeneralElection==1)->on11
+# Get ON 07
+on07<-read.csv(file="https://results.elections.on.ca/api/report-groups/4/report-outputs/510/csv")
+on07 %>% 
+  filter(IsGeneralElection==1)->on07
 #Replacing hyphenated dashes
+names(on07)
+on07 %>% 
+  select(1,3,4,ElectoralDistrictName=ElectoralDistrictNameEnglish, 9,11,12,13,14,15)->on07
+nrow(on07)
+on07 %>% 
+  filter(IsGeneralElection==1)->on07
+nrow(on07)
+on07 <- on07 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
+on11 %>% 
+  select(1,3,4,ElectoralDistrictName=ElectoralDistrictNameEnglish, 9,11,12,13,14,15)->on11
+on11 <- on11 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
+on14 %>% 
+  select(1,3,4,ElectoralDistrictName=ElectoralDistrictNameEnglish, 9,11,12,13,14,15)->on14
+
+on14 <- on14 %>%
+  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+
 on18 <- on18 %>%
   mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
 
@@ -34,7 +67,7 @@ on22 <- on22 %>%
   mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
 
 #bind_rows
-on <- bind_rows(on18, on22)
+on <- bind_rows(on07,on11,on14, on18, on22)
 #check things out
 glimpse(on18)
 glimpse(on22)
@@ -69,20 +102,47 @@ on <- on %>%
   rename(
     Election = `EventNameEnglish`,
     Date = `PollingDate`,
-    Party = `PoliticalInterestCode`,
+    #Party = `PoliticalInterestCode`,
     Votes = `TotalValidBallotsCast`,
     Percent = `PercentOfTotalValidBallotsCast`
   )
 
 
 #This code renames parties' abbreviations to something more comprehensible.
+table(on14$PoliticalInterestCode)
+table(on07$PoliticalInterestCode)
+# Recode date
+on %>% 
+  mutate(Date=case_when(
+    str_detect(Election, "2007")~2007,
+    str_detect(Election, "2011")~2011,
+    str_detect(Election, "2014")~2014,
+    str_detect(Election, "2018")~2018,
+    str_detect(Election, "2022")~2022
+  ))->on
+on %>% 
+  mutate(Party=case_when(
+    Date<2012&PoliticalInterestCode=="PC"~"PC",
+    Date<2012&PoliticalInterestCode=="ND"~"NDP",
+    Date<2012&PoliticalInterestCode=="GP"~"Green",
+    Date<2012&PoliticalInterestCode=="L"~"Liberal",
+    Date>2011&PoliticalInterestCode=="GPO"~"Green",
+    Date>2011&PoliticalInterestCode=="LIB"~"Liberal",
+    Date>2011&PoliticalInterestCode=="PCP"~"PC",
+    Date>2011&PoliticalInterestCode=="OLP"~"Liberal",
+    Date>2011&PoliticalInterestCode=="NDP"~"NDP",
+    TRUE~ 'Other'
+  ))->on
 
-on <- on %>%
-  mutate(Party = recode(Party, 
-                        "GPO" = "Green", 
-                        "PCP" = "PC", 
-                        "LIB" = "Liberal"))
+#on <- on %>%
+#  mutate(Party =recode(Party, 
+#                        "GPO" = "Green", 
+#                        "PCP" = "PC", 
+#                        "LIB" = "Liberal","OLP"="Liberal", "PC"="PC","NDP"="NDP",.default="Other"))
 
+on %>% 
+  group_by(Date) %>% 
+  count(Party)
 on %>% 
   mutate(Election=case_when(
     str_detect(Election, "2022")==TRUE~ "2022 General Election",
@@ -91,19 +151,18 @@ on %>%
 
 #Turn all candidate names to Title Case
 on %>% 
-  mutate(NameOfCandidates=str_to_title(NameOfCandidates))->on
+  mutate(NameOfCandidates=str_to_title(NameOfCandidates),
+         ElectoralDistrictName=str_to_title(ElectoralDistrictName),
+         ElectoralDistrictName=str_replace_all(ElectoralDistrictName, "Of", "of"),
+         ElectoralDistrictName=str_replace_all(ElectoralDistrictName, "And", "and"),
+         ElectoralDistrictName=str_replace_all(ElectoralDistrictName, "The", "the"))->on
 
 #Remember: AT this point we have one row for each candidate
 names(on)
 on %>% 
   filter(., ElectoralDistrictNumber==124) 
-on
-# Recode date
-on %>% 
-  mutate(Date=case_when(
-    str_detect(Election, "2018")~2018,
-    str_detect(Election, "2022")~2022
-  ))->on
+
+
 
 #Filter PCs
 names(on)
@@ -252,8 +311,9 @@ on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
 on %>% 
   filter(is.na(FED)) 
 #
+
 on %>% 
-  filter(northern==1) 
+  filter(northern==1) %>% group_by(Date) %>% count()
 #### Get Ontario Provincial Boundary files 
 ontario<-read_sf(here("data/electoral_districts/"))
 names(ontario)
@@ -261,7 +321,18 @@ names(ontario)
 ontario %>% 
   mutate(ENGLISH_NA = str_replace_all(ENGLISH_NA, "—", "--"))->ontario
 #Defining northern ridings
-northern_ridings <- c("Algoma--Manitoulin", "Kiiwetinoong", "Kenora--Rainy River", "Mushkegowuk--James Bay", "Nickel Belt", "Nipissing", "Sault Ste. Marie", "Sudbury", "Thunder Bay--Atikokan", "Thunder Bay--Superior North", "Timiskaming--Cochrane", "Timmins", "Parry Sound--Muskoka")
+northern_ridings <- c("Algoma--Manitoulin", 
+                      "Kiiwetinoong", 
+                      "Kenora--Rainy River", 
+                      "Mushkegowuk--James Bay", 
+                      "Nickel Belt", 
+                      "Nipissing", 
+                      "Sault Ste. Marie", 
+                      "Sudbury", 
+                      "Thunder Bay--Atikokan", 
+                      "Thunder Bay--Superior North", 
+                      "Timiskaming--Cochrane", 
+                      "Timmins", "Parry Sound--Muskoka", "Timmins--James Bay")
 #check
 length(northern_ridings) #should be 13
 #Creating dummy variable in the Ontario districts
@@ -269,4 +340,4 @@ ontario$northern <- ifelse(ontario$ENGLISH_NA %in% northern_ridings, 1, 0)
 #Filter out northern ridings
 ontario %>% 
   filter(northern==1)->northern
-glimpse(northern)
+

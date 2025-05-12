@@ -26,11 +26,11 @@ on_da_tongfen %>%
   st_drop_geometry() %>% 
   #Now join it to `on` matching the EDID variable in on_da_tongfen
   # with the ElectoralDistrictNumber variable in `on`
-  right_join(., on, by=c("ED_ID"="ElectoralDistrictNumber"))->on
+  right_join(., on, by=c("ENGLISH_NA"="ElectoralDistrictName"))->on
 #Check
 names(on)
 head(on)
-
+view(on)
 #We are now missing the non_northern_data
 # This was pulled directly from Statistics Canada in 2_get_non_northern_demographics.R
 #This drops a variable we don't need
@@ -39,10 +39,14 @@ non_northern_data %>%
 
 #This renames teh population variable in `on` in order to match
 # the population variable in the non_northern data
+names(on)
 on %>% 
   rename(population=Population_source) %>% 
   #This combines the `on` data with the non_northern data
-  rows_patch(., non_northern_data, by=c("FED")) ->on
+  rows_patch(., non_northern_data, by=c("FED"))->on
+on %>% 
+distinct(ENGLISH_NA, Date) %>% 
+  count(Date)
 #This drops a few variables
 on %>% 
   select(-IsGeneralElection, -ResignedMPPName)->on
@@ -51,32 +55,84 @@ on %>%
 #Check 
 on %>% 
   filter(northern!=1) %>% 
-  filter(ElectoralDistrictName=="Ajax")
+  filter(ENGLISH_NA=="Ajax")  
 # https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/page.cfm?Lang=E&SearchText=ajax&DGUIDlist=2013A000435001&GENDERlist=1,2,3&STATISTIClist=1,4&HEADERlist=0
 
 #This code divides each demographic variable by population to get a percent
 on %>% 
-  mutate(across(c(francophones, phds, mining, certificate, first_nations), ~(.x/population), .names="{.col}_pct"))->on
+  mutate(across(c(francophones, phds, mining, certificate, first_nations), 
+                ~(.x/population), .names="{.col}_pct"))->on
 #Which ridings are the most francophone
 on %>% 
-  distinct(ElectoralDistrictName, francophones_pct) %>% 
+  distinct(ENGLISH_NA, francophones_pct) %>% 
   slice_max(francophones_pct, n=10)
 
 #Which ridings are the most mining
 #Which ridings are the most francophone
 on %>% 
-  distinct(ElectoralDistrictName, mining_pct) %>% 
+  distinct(ENGLISH_NA, mining_pct) %>% 
   slice_max(mining_pct, n=10)
 #Which ridings are the most francophone
 on %>% 
-  distinct(ElectoralDistrictName, first_nations_pct) %>% 
+  distinct(ENGLISH_NA, first_nations_pct) %>% 
   slice_max(first_nations_pct, n=10)
 
 on %>% 
-  distinct(ElectoralDistrictName, age) %>% 
+  distinct(ENGLISH_NA, age) %>% 
   slice_max(age, n=10)
 
 on %>% 
-  distinct(ElectoralDistrictName, certificate_pct) %>% 
+  distinct(ENGLISH_NA, certificate_pct) %>% 
   slice_max(certificate_pct, n=10)
+
+# Run the did 
+
+on<-on %>% 
+  mutate(treated=case_when(
+    str_detect(ENGLISH_NA, "Sudbury|Nickel")~1,
+    TRUE~0
+  ))
+
+# Define closures
+on %>% 
+  mutate(closure=case_when(
+    treated==1&Date==2022~1,
+    TRUE~ 0
+  ))->on
+
+library(fixest)
+on %>% filter(Party=="PC")->pc
+#pc %>% filter(Date==2011&ENGLISH_NA=="Brampton--Springdale") %>% view()
+#pc %>% 
+#  group_by(Date, ENGLISH_NA, treated) %>% count() %>% filter(n!=1)
+
+
+# Show treated versus untreated plot
+pc %>% 
+  group_by(treated, Date) %>% 
+  summarize(average=mean(Percent))
+# Define treated ridings
+
+pc %>% 
+  group_by(northern,treated, Date) %>% 
+  summarize(Average=mean(Percent))  %>% 
+  mutate(Treated=case_when(
+    treated==0~"Other northern (Untreated)",
+    treated==1~"Sudbury/Nickel Belt (Treated)"
+  )) %>% 
+ggplot(., aes(x=as.factor(Date), y=Average, fill=Treated))+
+  geom_col(position="dodge")+
+  facet_wrap(~car::recode(northern, "0='Southern Ontario'; 1='Northern Ontario'", levels=c("Southern Ontario", "Northern Ontario")))+
+  labs(x="Election", y="Average PC Vote Share")+scale_fill_manual(values=c("darkblue", "lightblue"))+
+  theme(legend.position="bottom")
+
+
+model1<-feols(Percent~closure|ENGLISH_NA+Date, data=subset(pc, northern==1), cluster=c("ENGLISH_NA", "Date"))
+model2<-feols(Percent~closure|ENGLISH_NA+Date, data=pc, cluster=c("ENGLISH_NA", "Date"))
+library(modelsummary)
+summary(model1)
+summary(model2)
+modelsummary(list(model1, model2), stars=T, 
+             coef_rename=c('closure'='Bankruptcy'), gof_omit = c('BIC|AIC'))
+?modelsummary
 

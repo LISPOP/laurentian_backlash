@@ -2,24 +2,51 @@
 
 library(sf)
 library(here)
-on18_poll<-st_read(here('data/poll_boundaries/Polling Division Shapefile - 2018 General Election/'))
-on22_poll<-st_read(here('data/poll_boundaries/Polling Division Shapefile - 2022 General Election/'))
-head(on18_poll)
+
+#Set 2018 URL
+on18_poll_boundary.zip<-"https://www.elections.on.ca/content/dam/NGW/sitecontent/2017/preo/Polling%20Division%20Shapefile%20-%202018%20General%20Election.zip"
+on22_poll_boundary.zip<-"https://www.elections.on.ca/content/dam/NGW/sitecontent/2017/preo/shapefiles/Polling%20Division%20Shapefile%20-%202022%20General%20Election.zip"
+tmp<-tempfile()
+tmp2<-tempdir()
+on18_poll_boundary<-download.file(url=on18_poll_boundary.zip, destfile=tmp)
+unzip(zipfile=tmp, exdir=tmp2)
+on18_poll_boundary<-read_sf(tmp2)
+tmp<-tempfile()
+tmp2<-tempdir()
+on22_poll_boundary<-download.file(url=on22_poll_boundary.zip, destfile=tmp)
+unzip(zipfile=tmp, exdir=tmp2)
+on22_poll_boundary<-read_sf(tmp2)
+# on18_poll<-st_read(here('data/poll_boundaries/Polling Division Shapefile - 2018 General Election/'))
+# on22_poll<-st_read(here('data/poll_boundaries/Polling Division Shapefile - 2022 General Election/'))
+head(on18_poll_boundary)
+on18_poll_boundary %>% 
+  filter(ED_NAME_EN=="Sudbury") %>% 
+  nrow()
+on22_poll %>% 
+  filter(ED_NAME_EN=="Sudbury") %>% 
+  nrow()
+on22_poll$PD_LABEL
+on22_poll$PD_NUMBER
 library(tidyverse)
 glimpse(on18_poll)
 st_crs(on18_poll)
-on18_poll %>% 
-  filter(ED_NAME_EN=="Sudbury")->on18_poll
-on22_poll %>% 
-  filter(ED_NAME_EN=="Sudbury")->on22_poll
-on18_poll %>% 
-  mutate(Year=rep("2018", nrow(.)))->on18_poll
-on18_poll %>% 
-  mutate(Year=rep("2022", nrow(.)))->on22_poll
-on18_poll %>% 
-  bind_rows(on22_poll)->on_poll
-ggplot(on_poll)+geom_sf(data=filter(on_poll, Year=="2018"), col="darkgreen", fill=NA)+
-  geom_sf(data=filter(on_poll, Year=="2022", fill=NA), col="darkred")+theme_minimal()
+on18_poll_boundary %>% 
+  mutate(Year=rep(2018, nrow(.))) %>% 
+  filter(ED_NAME_EN=="Sudbury")->sudbury18_poll_boundary
+on22_poll_boundary %>% 
+  mutate(Year=rep(2022, nrow(.))) %>% 
+  filter(ED_NAME_EN=="Sudbury")->sudbury22_poll_boundary
+
+sudbury18_poll_boundary %>% 
+  bind_rows(sudbury22_poll_boundary)->sudbury_poll_boundary
+sudbury_poll_boundary %>% 
+  select(Year,PD_NUMBER) %>% 
+  group_by(Year) %>% 
+  count(PD_NUMBER) %>% view()
+ggplot(sudbury_poll_bounadry)+
+  geom_sf(data=filter(on_poll, Year=="2018"), col="darkgreen", fill=NA)+
+  geom_sf(data=filter(on_poll, Year=="2022"), col="darkred", fill=NA)+
+  theme_minimal()
 
 #install.packages("tidygeocoder")
 library(tidygeocoder)
@@ -32,7 +59,7 @@ laurentian <- st_as_sf(laurentian, coords=c('long', 'lat'), crs = "WGS84")
 
 sf_use_s2(FALSE)
 #install.packages("lwgeom")
-on_poll$distance<-as.vector(st_distance(laurentian, st_transform(on_poll, st_crs(laurentian))))
+sudbury_poll_boundary$distance<-as.vector(st_distance(laurentian, st_transform(on_poll, st_crs(laurentian))))
 
 
 
@@ -44,22 +71,77 @@ on22_poll_results %>%
   bind_rows(on18_poll_results)->on_poll_results
 on_poll_results %>% 
   filter(str_detect(string=EventNameEnglish, "General"))->on_poll_results
+# Turn candidate name to upper
+on_poll_results %>% 
+  mutate(NameOfCandidates=str_to_title(NameOfCandidates)) ->on_poll_results
+names(on22_poll_results)
+on_poll_results %>% 
+  mutate(Year=case_when(
+    str_detect(EventNameEnglish, "2022 Provincial General Election")~2022,
+    str_detect(EventNameEnglish, "2018")~2018
+  ))->on_poll_results
 
 # Use the separate command to separate the column 
 # ElectoralDistrictNameEnglish into two columns. 
 on_poll_results %>% 
   filter(str_detect(ElectoralDistrictNameEnglish,"Sudbury"))->sudbury_poll_results
-# Uncomment these lines to see what they do!
-#df <- tibble(id = 1:3, x = c("m-123", "f-455", "f-123"))
 
-#df %>% separate_wider_delim(x, delim = "-", names = c("gender", "unit"))
+#Check if poll numbers are not in the boundary file 
+sudbury_poll_results$PollNumber
+sudbury18_poll_boundary$PD_NUMBER
+glimpse(sudbury_poll_results)
+glimpse(sudbury_poll_boundary)
+#Convert poll results to number for physical polls
+view(sudbury_poll_results)
+head(sudbury_poll_results)
+sudbury_poll_results %>% 
+  mutate(PD_NUMBER=case_when(
+    PollCategory=="Standard"~as.double(PollNumber),
+    PollCategory=="Advanced"~0
+  ))->sudbury_poll_results
+sudbury_poll_results %>% 
+  filter(!is.na(PD_NUMBER)) %>% 
+  select(PollCategory, PollNumber, PD_NUMBER) %>% view()
 
-#df %>% separate_wider_position(x, c(gender = 1, 1, unit = 3))
+#
 
-# How to add the party
-# sudbury_poll_results %>% 
-# mutate(Party=case_when(
-#str_detect(NameOfCandidates, "last_name_of_NDP_candidate")~"NDP",
-#str_detect(NameOfCandidates, "last_name_of_PC_candidate")~"PC",
-# TRUE~'Other'))->sudbury_poll_results
+sudbury_poll_results %>% 
+  left_join(., sudbury_poll_boundary)->sudbury_polls
+sudbury_poll_results %>% 
+  group_by(Year) %>% 
+  summarize(min(PD_NUMBER, na.rm=T), max=max(PD_NUMBER, na.rm=T))
+# 
+sudbury_polls %>% 
+  filter(PD_NUMBER==716)
+
+sudbury_polls %>% 
+group_by(Year, PollNumber) %>% 
+  mutate(Total=sum(AcceptedBallotCount)) %>% 
+  mutate(Percent=AcceptedBallotCount/Total) %>% 
+  mutate(Party=case_when(
+    str_detect(NameOfCandidates, "West")~"NDP",
+    str_detect(NameOfCandidates, "Thibeault|Farrow")~"Liberal",
+    str_detect(NameOfCandidates, "Crowder|Despatie")~"PC",
+    str_detect(NameOfCandidates, "Robinson")~"Green",
+    TRUE~ "Other"
+  ))->sudbury_polls
+#Calculate PC Vote Share
+
+# Correlate Distance with PC Vote Sahre
+sudbury_polls %>% 
+  filter(Party=="PC") %>% 
+  ggplot(., aes(x=distance, y=Percent))+geom_point()+facet_wrap(~Year)+geom_smooth(method="lm")
+
+#Which party did better in advance polls
+# Calculate change in vote share
+sudbury_polls %>% 
+  filter(Party=="PC") %>% 
+  distinct(Year, PD_NUMBER, PD_NUMBER, geometry, Percent, distance) %>% ungroup() %>% 
+  arrange(PD_NUMBER, Year) %>% 
+  mutate(delta=Percent-lag(Percent, n=1)) %>% 
+  arrange(PD_NUMBER, Year) %>%  
+  ggplot(., aes(x=distance, y=delta))+
+  geom_point()+geom_smooth(method="lm", se=F)+
+  labs(x="Distance From Laurentian University", y="Change in PC Vote Share")
+
 

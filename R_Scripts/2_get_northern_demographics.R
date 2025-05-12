@@ -37,7 +37,7 @@ da_geometry %>%
 northern %>% 
   rename(Population_source=Population)->northern
 northern_tongfen<-tongfen_estimate(target=northern, source=da_data, meta=meta, na.rm=T)
-
+glimpse(northern)
 #Calculate Error Percent
 northern_tongfen %>% 
   mutate(error_percent=(Population/Population_source)/Population_source) %>% 
