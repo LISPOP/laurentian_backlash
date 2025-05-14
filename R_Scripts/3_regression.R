@@ -100,39 +100,47 @@ on %>%
     TRUE~ 0
   ))->on
 
+# Rename District
+on %>% 
+  rename(District=ENGLISH_NA, Year=Date)->on
 library(fixest)
 on %>% filter(Party=="PC")->pc
 #pc %>% filter(Date==2011&ENGLISH_NA=="Brampton--Springdale") %>% view()
 #pc %>% 
 #  group_by(Date, ENGLISH_NA, treated) %>% count() %>% filter(n!=1)
 
-
+pc$Year
 # Show treated versus untreated plot
 pc %>% 
-  group_by(treated, Date) %>% 
+  group_by(treated,Year) %>% 
   summarize(average=mean(Percent))
-# Define treated ridings
+# Show Results
+# Graph 1
+# 
+theme_set(theme_minimal(base_size=24))
 
 pc %>% 
-  group_by(northern,treated, Date) %>% 
+  group_by(northern,treated, Year) %>% 
   summarize(Average=mean(Percent))  %>% 
   mutate(Treated=case_when(
-    treated==0~"Other northern (Untreated)",
-    treated==1~"Sudbury/Nickel Belt (Treated)"
+    treated==0~"Untreated",
+    treated==1~"Treated (Sudbury/Nickel Belt)"
   )) %>% 
-ggplot(., aes(x=as.factor(Date), y=Average, fill=Treated))+
+  mutate(Treated=factor(Treated, levels=c("Untreated", "Treated (Sudbury/Nickel Belt)"))) %>% 
+mutate(Region=case_match(northern, 0~"Southern Ontario", 1~"Northern Ontario")) %>% 
+ggplot(., aes(x=as.factor(Year), y=Average, fill=Treated))+
   geom_col(position="dodge")+
-  facet_wrap(~car::recode(northern, "0='Southern Ontario'; 1='Northern Ontario'", levels=c("Southern Ontario", "Northern Ontario")))+
+  facet_wrap(~fct_relevel(factor(Region), "Southern Ontario"))+
   labs(x="Election", y="Average PC Vote Share")+scale_fill_manual(values=c("darkblue", "lightblue"))+
   theme(legend.position="bottom")
+ggsave(filename=here("Poster/southern_northern_ontario.png"), width=12, height=8, dpi=300)
 
 
-model1<-feols(Percent~closure|ENGLISH_NA+Date, data=subset(pc, northern==1), cluster=c("ENGLISH_NA", "Date"))
-model2<-feols(Percent~closure|ENGLISH_NA+Date, data=pc, cluster=c("ENGLISH_NA", "Date"))
+model1<-feols(Percent~closure|District+Year, data=subset(pc, northern==1), cluster=c("District", "Year"))
+model2<-feols(Percent~closure|District+Year, data=pc, cluster=c("District", "Year"))
 library(modelsummary)
-summary(model1)
-summary(model2)
-modelsummary(list(model1, model2), stars=T, 
-             coef_rename=c('closure'='Bankruptcy'), gof_omit = c('BIC|AIC'))
-?modelsummary
+modelsummary(list("Northern Ontario"=model1, "All Ontario"=model2), stars=T, 
+             coef_rename=c('closure'='Bankruptcy'), 
+             gof_omit = c('BIC|AIC|Within|Adj'), fmt=3)
+
 

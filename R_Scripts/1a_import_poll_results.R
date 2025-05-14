@@ -87,13 +87,10 @@ on_poll_results %>%
   filter(str_detect(ElectoralDistrictNameEnglish,"Sudbury"))->sudbury_poll_results
 
 #Check if poll numbers are not in the boundary file 
-sudbury_poll_results$PollNumber
-sudbury18_poll_boundary$PD_NUMBER
-glimpse(sudbury_poll_results)
-glimpse(sudbury_poll_boundary)
+
+
 #Convert poll results to number for physical polls
-view(sudbury_poll_results)
-head(sudbury_poll_results)
+
 sudbury_poll_results %>% 
   mutate(PD_NUMBER=case_when(
     PollCategory=="Standard"~as.double(PollNumber),
@@ -107,13 +104,13 @@ sudbury_poll_results %>%
 
 sudbury_poll_results %>% 
   left_join(., sudbury_poll_boundary)->sudbury_polls
+
+#Check the sudbury poll numbers
 sudbury_poll_results %>% 
   group_by(Year) %>% 
   summarize(min(PD_NUMBER, na.rm=T), max=max(PD_NUMBER, na.rm=T))
-# 
-sudbury_polls %>% 
-  filter(PD_NUMBER==716)
 
+#Total party vote share and percent per party.
 sudbury_polls %>% 
 group_by(Year, PollNumber) %>% 
   mutate(Total=sum(AcceptedBallotCount)) %>% 
@@ -131,7 +128,7 @@ group_by(Year, PollNumber) %>%
 sudbury_polls %>% 
   filter(Party=="PC") %>% 
   ggplot(., aes(x=distance, y=Percent))+geom_point()+facet_wrap(~Year)+geom_smooth(method="lm")
-
+ggsave(filename=here("Poster/poll_distance_laurentian.png", dpi=300))
 #Which party did better in advance polls
 # Calculate change in vote share
 sudbury_polls %>% 
@@ -143,5 +140,5 @@ sudbury_polls %>%
   ggplot(., aes(x=distance, y=delta))+
   geom_point()+geom_smooth(method="lm", se=F)+
   labs(x="Distance From Laurentian University", y="Change in PC Vote Share")
-
+ggsave(here("Poster/distance_laurentian.png"),dpi=300, width=10, height=8)
 

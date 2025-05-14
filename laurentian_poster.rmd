@@ -1,0 +1,114 @@
+---
+title: Did The Ontario Progressive Conservatives Suffer Any Electoral Backlash From The Laurentian University Bankruptcy
+author:
+  - name: Simon Kiss
+    affil: 1
+    orcid: '0000-0003-1837-5428'
+  - name: Nicole Lehecka
+    affil: 3
+affiliation:
+  - num: 1
+    address: Human Rights and Political Science, Wilfrid Laurier University
+  - num: 2
+    address: Department of Political Science, McGill University
+  - num: 3
+    address: Department of Political Science, Wilfrid Laurier University
+column_numbers: 3
+#logoright_name: https&#58;//raw.githubusercontent.com/brentthorne/posterdown/master/images/betterhexlogo.png
+logoleft_name: "kiss_lehecka_thomson_campos_gottardo_files/lispop_logo.png"
+output: 
+  posterdown::posterdown_html:
+    self_contained: false
+bibliography: laurentian.bib
+primary_colour: "#330072"
+secondary_color: "#F2A900"
+---
+
+```{r, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(results = 'asis',
+                      echo = FALSE,
+                      warning = FALSE,
+                      tidy = FALSE,
+                      message = FALSE,
+                      fig.align = 'center',
+                      out.width = "100%")
+#opts_knit$set(root.dir=rprojroot::find_rstudio_root_file())
+options(knitr.table.format = "html") 
+```
+
+```{r run-code, results='hide', warning=F, message=F}
+# Run the whole background code
+library(here)
+source(here("R_Scripts/3_regression.R"))
+```
+
+# Introduction
+
+In 2021, Laurentian University declared bankruptcy, an unprecedented event for a Canadian public university. In addition to serving the higher education needs for Northern Ontario, Laurentian has had a historically important role educating Franco-Ontarians.
+
+## Research Question
+
+Is there any evidence the bankruptcy of Laurentian University harmed the electoral prospects of the incumbent PC government.
+
+# Methods
+
+Individual-level survey data that could shed light on this question is unavailable. It is necessary to rely on aggregate vote data.
+
+A particular innovation of this project is to use tools developed as part of the **credibility revolution** in the social sciences which features new methods tools for assessing causal effects in observational data.
+
+1.  Differences-in-Differences
+2.  Synthetic Control
+3.  Geographic assessment of electoral results
+
+<br>
+
+# Challenges
+
+The research project is severely limited by changing electoral boundaries. Specifically, from 2007 to to 2014, Ontario defined 11 northern districts to increase northern representations with boundaries that did not map onto federal boundaries. This complicates developing demographic profiles of those boundaries, although vote patterns can be compared across time for these districts as the boundaries did not change. However, in 2015, Ontario added two new northern districts from the districts of Timmins-James Bay and Kenora Rainy River to add two new boundaries.
+
+# Solutions
+
+1.  The boundaries of Sudbury and Nickel Belt have been almost unchanged since 2007, allowing meaningful comparison of vote shares of those two ridings across time z.
+2.  Because the two new northern districts only affected the boundaries of two northern districts, the vote shares in Sudbury and Nickel Belt could be compared meaningfully across all other northern and southern districts back to 2007. Those aggregations are identical.
+3.  For the purposes of the synthetic control method, a demographic profile of cases is necessary. While census profiles of southern Ontario districts are readily available because the boundaries of those districts are identical to federal districts, demographic profiles of northern districts must be estimated. Geographers use the method of *weighted area interpolation* to do this [@lam1983]. Canadian statistical software exists to facilitate this [@tongfena].
+
+# Results
+
+**Top-Level Pattern**
+
+Figure \ref{fig:plot1} shows the distribution of the variable of interest by treatment status and sub-group for Northern Ontario and Southern Ontario. Between 2018 and 2022, the PC vote share did not move in Southern Ontario at all. And it went **up** in Sudbury/Nickel Belt. However, it *also* went up aross Northern Ontario. 
+
+```{r plot1, fig.cap="PC Vote Share In Southern Ontario, Northern Ontario and Sudbury Nickel-Belt", eval=T}
+
+include_graphics(path="Poster/southern_northern_ontario.png")
+```
+
+### Differences-in-Differences
+
+In contrast to standard cross-sectional OLS regressions which compare levels of an outcome variable in treated cases with levels of an outcome variable in untreated cases, the difference-in-difference estimator compares **changes** in the outcome variable in **treated** cases with changes in the coutcome variable in **untreated** cases. It relies on panel data and must require at at least two treated cases.
+
+For this purposes, we consider Sudbury and Nickel Belt as electoral districts treated with a university bankruptcy. Because of the distinct nature of politics in Northern Ontario and the observed difference in patterns of the outcome variable, we model two different sub-samples: all untreated Ontario electoral districts (Model 1) and only northern Ontario untreated districts (Model 2).  The results in Model 2 of \ref{tbl:did-table} show a very weak coefficient that is just shy of low levels of statistical significance. This could be interpreted as a pure null finding or weak evidence that the Laurentian bankruptcy **reduced the increase in the PCs vote share in the treated districts compared to other northern Ontario districts**. 
+
+```{r did-table}
+library(modelsummary)
+modelsummary(list("Northern Ontario"=model1, "All Ontario"=model2), stars=c("*"=0.05, "**"=0.01), 
+             coef_rename=c('closure'='Bankruptcy'), 
+             gof_omit = c('BIC|AIC|Within|Adj'), fmt=2, 
+             output="kableExtra")
+```
+
+## Synthetic Control
+
+In instances where there is only one treated case, one can apply the synthetic control method.  Here, 
+
+## Geographic Proximity
+
+```{r distance-plot, fig.cap="Change in PC vote share, Sudbury polling dvisions, 2022-2018 by distance to Laurentian University", eval=F}
+include_graphics(path=here("Poster/kiss_lehecka_thomson_campos_gottardo_files/distance_laurentian.png"))
+
+```
+
+# Limitations
+
+# References
