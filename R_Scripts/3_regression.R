@@ -30,7 +30,7 @@ on_da_tongfen %>%
 #Check
 names(on)
 head(on)
-view(on)
+#view(on)
 #We are now missing the non_northern_data
 # This was pulled directly from Statistics Canada in 2_get_non_northern_demographics.R
 #This drops a variable we don't need

@@ -25,7 +25,7 @@ pc<-as.data.frame(pc)
 # on 
 on %>% 
   #group_by(ElectoralDistrictName) %>% 
-  summarize(avg=mean(francophones_pct), sd=sd(francophones_pct))
+  summarize(avg=mean(francophones_pct, na.rm = TRUE), sd=sd(francophones_pct, na.rm = TRUE))
 0.016+0.065
 pc %>% 
   filter(francophones_pct>0.081) %>% 
