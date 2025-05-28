@@ -10,7 +10,8 @@ source("R_Scripts/3_merge_northern_non_northern.R")
 #This deals with the FED variable which is stored as characters
 #Brynn, this is what you did, assigning the FED codes to each provincial district
 # in Ontario
-on$FED<-as.character(on$FED)
+#### THIS VARIABLE DOES NOT EXIST 
+#on$FED<-as.character(on$FED)
 
 #This merges the northern demographicdata data into the `on` dataframe that Brynn and Nicole constructed
 # it effectively takes the demographic statistics for northern ridings
@@ -20,14 +21,14 @@ names(on_da_tongfen)
 
 #I have waited a long time to do this. 
 # This is the object created by the tongfen procedure
-on_da_tongfen %>% 
-  #pick out just these key variables
-  select(ED_ID, ENGLISH_NA, Population_source, francophones:first_nations) %>% 
-  #Drop the geometry e.g. the boudnaries of each district
-  st_drop_geometry() %>% 
-  #Now join it to `on` matching the EDID variable in on_da_tongfen
-  # with the ElectoralDistrictNumber variable in `on`
-  right_join(., on, by=c("ENGLISH_NA"="ElectoralDistrictName"))->on
+# on_da_tongfen %>% 
+#   #pick out just these key variables
+#   select(ED_ID, ENGLISH_NA, Population_source, francophones:first_nations) %>% 
+#   #Drop the geometry e.g. the boudnaries of each district
+#   st_drop_geometry() %>% 
+#   #Now join it to `on` matching the EDID variable in on_da_tongfen
+#   # with the ElectoralDistrictNumber variable in `on`
+#   right_join(., on, by=c("ENGLISH_NA"="ElectoralDistrictName"))->on
 #Check
 names(on)
 head(on)
@@ -35,15 +36,15 @@ head(on)
 #We are now missing the non_northern_data
 # This was pulled directly from Statistics Canada in 2_get_non_northern_demographics.R
 #This drops a variable we don't need
-non_northern_data %>% 
-  select(-DGUID)->non_northern_data
+# non_northern_data %>% 
+#   select(-DGUID)->non_northern_data
 
 #This renames teh population variable in `on` in order to match
 # the population variable in the non_northern data
 names(on)
 
 on %>% 
-  rename(District=ElectoralDistrictName,Year=Date)->on
+  rename(District=ENGLISH_NA,Year=Date)->on
 #This code is a check that our non_northern census data
 # matches what STatscan has published
 #Check 
@@ -128,6 +129,7 @@ on %>% filter(Party=="PC")->pc
  
 # 
 theme_set(theme_minimal(base_size=24))
+
 theme_update(legend.position="bottom")
 pc_cols<-c("darkblue", "lightblue")
 
@@ -136,7 +138,8 @@ pc %>%
   group_by(Year) %>% 
   summarize(result=mean(Percent, na.rm=T))
 
-#First show Sudbury versus all others
+
+ß#First show Sudbury versus all others
 pc %>%
   ggplot(., aes(x=as.factor(Year), y=Percent, fill=fct_relevel(sudbury, "Other")))+
   geom_col(position="dodge")+

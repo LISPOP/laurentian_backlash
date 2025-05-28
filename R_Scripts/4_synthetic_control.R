@@ -29,7 +29,7 @@ pc %>%
 pc %>% 
   filter(northern==1&sudbury!="Sudbury") %>% 
   filter(Year>2017) %>% 
-  select(District) %>% distinct() %>% unlist()->northern_controls
+  select(ED_ID) %>% distinct() %>% unlist()->northern_controls
 
 data_northern<-dataprep(foo=subset(pc, Year>2017), 
          predictors=c("francophones_pct", "mining_pct", "income", "phds_pct",  "first_nations_pct", "density"),
@@ -38,14 +38,24 @@ data_northern<-dataprep(foo=subset(pc, Year>2017),
          dependent="Percent",
          unit.variable="ED_ID",
          unit.names.variable = "District",
-         treatment.identifier = "Sudbury",
+         treatment.identifier = 103,
          controls.identifier = northern_controls,
          time.optimize.ssr = 2018,
          time.plot=c(2018,2022)
          )
 
+
 mod_northern<-synth(data_northern)
 mod_northern
+
+synth.tab(dataprep.res = data_northern, 
+          synth.res = mod_northern)$tab.pred
+
+
+
+synth.tab(dataprep.res = data_northern, 
+          synth.res = mod_northern)$tab.v
+
 #What are the weights of the controls?
 northern_tab<-synth.tab(mod_northern, data_northern)
 northern_tab
@@ -130,4 +140,21 @@ synthetic_results_northern %>%
 # ggsave(filename=here("Poster/synthetic_control.png"), width=12,height=8)
   #join back to vote results for sudbury
 
+# Obtain p values using the function created by  Michael Kistner 
 
+
+
+RMSES <- RMSPETest(subset(pc, Year > 2017),
+          dependent = "Percent",
+          predictors=c("francophones_pct", "mining_pct", "income", "phds_pct",  "first_nations_pct", "density"),
+          unit_numerics = "ED_ID",
+          unit_names = "District",
+          time_var = "Year",
+          treatment_id = 103,
+          controls_id = northern_controls,
+          time_predictors_prior = 2022,
+          time_optimize_ssr = 2018
+          )
+
+# The RMSE is ranked 4 so therefore we divide 14 by 4
+4/14 # This is the p-value

@@ -15,6 +15,7 @@ library(sf)
 library(rvest)
 library(cancensus)
 library(tongfen)
+library(lwgeom)
 #set_cancensus_api_key('', install=T)
 #Run this command to be sure your cancensus api key has been set
 #show_cancensus_api_key('')
