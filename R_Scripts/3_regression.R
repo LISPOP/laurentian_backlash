@@ -6,7 +6,6 @@
 source("R_Scripts/3_merge_northern_non_northern.R")
 # Rename District
 
-<<<<<<< HEAD
 
 #This deals with the FED variable which is stored as characters
 #Brynn, this is what you did, assigning the FED codes to each provincial district
@@ -42,8 +41,7 @@ non_northern_data %>%
 #This renames teh population variable in `on` in order to match
 # the population variable in the non_northern data
 names(on)
-=======
->>>>>>> c98e951a92e761913e216dffbbde314a423c10f0
+
 on %>% 
   rename(District=ElectoralDistrictName,Year=Date)->on
 #This code is a check that our non_northern census data

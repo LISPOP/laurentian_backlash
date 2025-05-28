@@ -13,7 +13,7 @@ pc<-as.data.frame(pc)
 # university towns as controls
 # Geographic neigbhours as controls
 
-<<<<<<< HEAD
+
 # on 
 on %>% 
   #group_by(ElectoralDistrictName) %>% 
@@ -24,8 +24,6 @@ pc %>%
   distinct(District) %>% 
   filter(District!="Sudbury")->francophones
 
-=======
->>>>>>> c98e951a92e761913e216dffbbde314a423c10f0
 # neighbouring districts
 # Select unchanged northern boundaries
 pc %>% 
