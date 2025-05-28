@@ -18,5 +18,7 @@ map(., \(x) {
    # x<-data.frame(x)
     }) %>%unlist() %>%  
   matrix(., ncol=2, byrow=T) %>% 
-  data.frame() %>% set_names(c("ED_ID", "Population"))->northern_population
+  data.frame() %>% set_names(c("ED_ID", "population_real"))->northern_population
 rm(pages)
+
+

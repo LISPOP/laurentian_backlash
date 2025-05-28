@@ -1,7 +1,7 @@
 #packages to install
 #Uncomment and execute 
 
-# list.of.packages<-c("Synth","webshot", "SCtools","tongfen", "cancensus", "here", "tidyverse", "sf", "rvest", "readxl", "knitr", "kableExtra")
+# list.of.packages<-c("Synth","webshot", "dataverse","SCtools","tongfen", "cancensus", "here", "tidyverse", "sf", "rvest", "readxl", "knitr", "kableExtra")
 # #INstall if necessary
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 # if(length(new.packages)) install.packages(new.packages)
@@ -82,7 +82,7 @@ on07 <- on07 %>%
 on11 %>% 
   select(1,3,4,ElectoralDistrictName=ElectoralDistrictNameEnglish, 9,11,12,13,14,15)->on11
 on11 <- on11 %>%
-  mutate(ElectoralDistrictName = str_replace_all(ElectoralDistrictName, "—", "--"))
+  mutate(ElectoralDistrictName = str_replace_all(str_to_title(ElectoralDistrictName), "—", "--"))
 
 on14 %>% 
   select(1,3,4,ElectoralDistrictName=ElectoralDistrictNameEnglish, 9,11,12,13,14,15)->on14
@@ -210,135 +210,58 @@ on %>%
 
 library(dplyr)
 
-
-on <- on %>%
-  mutate(FED = case_when(
-    ElectoralDistrictName == "Ajax" ~ 35001,
-    ElectoralDistrictName == "Algoma--Manitoulin--Kapuskasing" ~ 35002,
-    ElectoralDistrictName == "Aurora--Oak Ridges--Richmond Hill" ~ 35003,
-    ElectoralDistrictName == "Barrie--Innisfil" ~ 35004,
-    ElectoralDistrictName == "Barrie--Springwater--Oro-Medonte" ~ 35005,
-    ElectoralDistrictName == "Bay of Quinte" ~ 35006,
-    ElectoralDistrictName == "Beaches--East York" ~ 35007,
-    ElectoralDistrictName == "Brampton Centre" ~ 35008,
-    ElectoralDistrictName == "Brampton East" ~ 35009,
-    ElectoralDistrictName == "Brampton North" ~ 35010,
-    ElectoralDistrictName == "Brampton South" ~ 35011,
-    ElectoralDistrictName == "Brampton West" ~ 35012,
-    ElectoralDistrictName == "Brantford--Brant" ~ 35013,
-    ElectoralDistrictName == "Bruce--Grey--Owen Sound" ~ 35014,
-    ElectoralDistrictName == "Burlington" ~ 35015,
-    ElectoralDistrictName == "Cambridge" ~ 35016,
-    ElectoralDistrictName == "Carleton" ~ 35088,
-    ElectoralDistrictName == "Chatham-Kent--Leamington" ~ 35017,
-    ElectoralDistrictName == "Davenport" ~ 35018,
-    ElectoralDistrictName == "Don Valley East" ~ 35019,
-    ElectoralDistrictName == "Don Valley North" ~ 35020,
-    ElectoralDistrictName == "Don Valley West" ~ 35021,
-    ElectoralDistrictName == "Dufferin--Caledon" ~ 35022,
-    ElectoralDistrictName == "Durham" ~ 35023,
-    ElectoralDistrictName == "Eglinton--Lawrence" ~ 35024,
-    ElectoralDistrictName == "Elgin--Middlesex--London" ~ 35025,
-    ElectoralDistrictName == "Essex" ~ 35026,
-    ElectoralDistrictName == "Etobicoke Centre" ~ 35027,
-    ElectoralDistrictName == "Etobicoke--Lakeshore" ~ 35028,
-    ElectoralDistrictName == "Etobicoke North" ~ 35029,
-    ElectoralDistrictName == "Flamborough--Glanbrook" ~ 35030,
-    ElectoralDistrictName == "Glengarry--Prescott--Russell" ~ 35031,
-    ElectoralDistrictName == "Guelph" ~ 35032,
-    ElectoralDistrictName == "Haldimand--Norfolk" ~ 35033,
-    ElectoralDistrictName == "Haliburton--Kawartha Lakes--Brock" ~ 35034,
-    ElectoralDistrictName == "Hamilton Centre" ~ 35035,
-    ElectoralDistrictName == "Hamilton East--Stoney Creek" ~ 35036,
-    ElectoralDistrictName == "Hamilton Mountain" ~ 35037,
-    ElectoralDistrictName == "Hamilton West--Ancaster--Dundas" ~ 35038,
-    ElectoralDistrictName == "Hastings--Lennox and Addington" ~ 35039,
-    ElectoralDistrictName == "Huron--Bruce" ~ 35040,
-    ElectoralDistrictName == "Kanata--Carleton" ~ 35041,
-    ElectoralDistrictName == "Kenora" ~ 35042,
-    ElectoralDistrictName == "King--Vaughan" ~ 35043,
-    ElectoralDistrictName == "Kingston and the Islands" ~ 35044,
-    ElectoralDistrictName == "Kitchener Centre" ~ 35045,
-    ElectoralDistrictName == "Kitchener--Conestoga" ~ 35046,
-    ElectoralDistrictName == "Kitchener South--Hespeler" ~ 35047,
-    ElectoralDistrictName == "Lambton--Kent--Middlesex" ~ 35048,
-    ElectoralDistrictName == "Lanark--Frontenac--Kingston" ~ 35049,
-    ElectoralDistrictName == "Leeds--Grenville--Thousand Islands and Rideau Lakes" ~ 35050,
-    ElectoralDistrictName == "London--Fanshawe" ~ 35051,
-    ElectoralDistrictName == "London North Centre" ~ 35052,
-    ElectoralDistrictName == "London West" ~ 35053,
-    ElectoralDistrictName == "Markham--Stouffville" ~ 35054,
-    ElectoralDistrictName == "Markham--Thornhill" ~ 35055,
-    ElectoralDistrictName == "Markham--Unionville" ~ 35056,
-    ElectoralDistrictName == "Milton" ~ 35057,
-    ElectoralDistrictName == "Mississauga Centre" ~ 35058,
-    ElectoralDistrictName == "Mississauga East--Cooksville" ~ 35059,
-    ElectoralDistrictName == "Mississauga--Erin Mills" ~ 35060,
-    ElectoralDistrictName == "Mississauga--Lakeshore" ~ 35061,
-    ElectoralDistrictName == "Mississauga--Malton" ~ 35062,
-    ElectoralDistrictName == "Mississauga--Streetsville" ~ 35063,
-    ElectoralDistrictName == "Nepean" ~ 35065,
-    ElectoralDistrictName == "Newmarket--Aurora" ~ 35065,
-    ElectoralDistrictName == "Niagara Centre" ~ 35066,
-    ElectoralDistrictName == "Niagara Falls" ~ 35067,
-    ElectoralDistrictName == "Niagara West" ~ 35068,
-    ElectoralDistrictName == "Nickel Belt" ~ 35069,
-    ElectoralDistrictName == "Nipissing--Timiskaming" ~ 35070,
-    ElectoralDistrictName == "Northumberland--Peterborough South" ~ 35071,
-    ElectoralDistrictName == "Oakville" ~ 35072,
-    ElectoralDistrictName == "Oakville North--Burlington" ~ 35073,
-    ElectoralDistrictName == "Orléans" ~ 35076,
-    ElectoralDistrictName == "Oshawa" ~ 35074,
-    ElectoralDistrictName == "Ottawa Centre" ~ 35075,
-    ElectoralDistrictName == "Ottawa South" ~ 35077,
-    ElectoralDistrictName == "Ottawa--Vanier" ~ 35078,
-    ElectoralDistrictName == "Ottawa West--Nepean" ~ 35079,
-    ElectoralDistrictName == "Oxford" ~ 35080,
-    ElectoralDistrictName == "Parkdale--High Park" ~ 35081,
-    ElectoralDistrictName == "Parry Sound--Muskoka" ~ 35082,
-    ElectoralDistrictName == "Perth--Wellington" ~ 35083,
-    ElectoralDistrictName == "Peterborough--Kawartha" ~ 35084,
-    ElectoralDistrictName == "Pickering--Uxbridge" ~ 35085,
-    ElectoralDistrictName == "Renfrew--Nipissing--Pembroke" ~ 35086,
-    ElectoralDistrictName == "Richmond Hill" ~ 35087,
-    ElectoralDistrictName == "St. Catharines" ~ 35089,
-    ElectoralDistrictName == "Toronto--St. Paul's" ~ 35090,
-    ElectoralDistrictName == "Sarnia--Lambton" ~ 35091,
-    ElectoralDistrictName == "Sault Ste. Marie" ~ 35092,
-    ElectoralDistrictName == "Scarborough--Agincourt" ~ 35093,
-    ElectoralDistrictName == "Scarborough Centre" ~ 35094,
-    ElectoralDistrictName == "Scarborough--Guildwood" ~ 35095,
-    ElectoralDistrictName == "Scarborough North" ~ 35096,
-    ElectoralDistrictName == "Scarborough--Rouge Park" ~ 35097,
-    ElectoralDistrictName == "Scarborough Southwest" ~ 35098,
-    ElectoralDistrictName == "Simcoe--Grey" ~ 35099,
-    ElectoralDistrictName == "Simcoe North" ~ 35100,
-    ElectoralDistrictName == "Spadina--Fort York" ~ 35101,
-    ElectoralDistrictName == "Stormont--Dundas--South Glengarry" ~ 35102,
-    ElectoralDistrictName == "Sudbury" ~ 35103,
-    ElectoralDistrictName == "Thornhill" ~ 35104,
-    ElectoralDistrictName == "Thunder Bay--Rainy River" ~ 35105, 
-    ElectoralDistrictName == "Thunder Bay--Superior North" ~ 35106,
-    ElectoralDistrictName == "Timmins--James Bay" ~ 35107,
-    ElectoralDistrictName == "Toronto Centre" ~ 35108,
-    ElectoralDistrictName == "Toronto--Danforth" ~ 35109,
-    ElectoralDistrictName == "Toronto--St. Paul's" ~ 35090,
-    ElectoralDistrictName == "University--Rosedale" ~ 35110,
-    ElectoralDistrictName == "Vaughan--Woodbridge" ~ 35111,
-    ElectoralDistrictName == "Waterloo" ~ 35112,
-    ElectoralDistrictName == "Wellington--Halton Hills" ~ 35113,
-    ElectoralDistrictName == "Whitby" ~ 35114,
-    ElectoralDistrictName == "Willowdale" ~ 35115,
-    ElectoralDistrictName == "Windsor--Tecumseh" ~ 35116,
-    ElectoralDistrictName == "Windsor West" ~ 35117,
-    ElectoralDistrictName == "York Centre" ~ 35118,
-    ElectoralDistrictName == "York--Simcoe" ~ 35119,
-    ElectoralDistrictName == "York South--Weston" ~ 35120,
-    ElectoralDistrictName == "Humber River--Black Creek" ~ 35121,
-    TRUE ~ NA_real_  # Default case for unmatched districts
+# Assign FEDS
+#Read in FEDS
+load(file=here("data/can_fedtable_final_20221005.RData"))
+#Add matching fedcreate variable to the on data set.
+on %>% 
+  mutate(fedcreate=case_when(
+    Date>2014~2013,
+    Date<2013 & Date > 2006 ~ 2003,
+    TRUE~NA
   ))->on
+  names(table)
+  #Selet the province name, the date the riding was creaated and the ED name
+  names(table)
+head(table)
+table %>% 
+  select(prname, fedcreate, geoname, id)->fed
+#Just the 2003 and 2013 representation orders
+fed %>% 
+  filter(fedcreate>2002&fedcreate<2022) %>% 
+  filter(prname=="Ontario")->fed
 
+# Split the fED Names at the -  into English French
+fed %>% 
+  separate(., col=geoname, sep=" - ", into=c('ElectoralDistrictName', 'ElectoralDistrictNameFrench')) ->fed
+fed %>% 
+mutate(ElectoralDistrictName=case_when(
+  fedcreate==2003~str_replace_all(ElectoralDistrictName, "-", "--"),
+  fedcreate==2013~ElectoralDistrictName,
+  )) %>% 
+  mutate(ElectoralDistrictName=ElectoralDistrictName)->fed
 
+on %>% 
+  filter(str_detect(ElectoralDistrictName, "Carleton")) %>% 
+  filter(Date>2003) %>% 
+  view()
+on %>% 
+  filter(str_detect(ElectoralDistrictName, "Lambton")) %>% 
+  filter(Date>2003) %>% 
+  view()
+
+names(fed)
+fed%>% 
+  filter(str_detect(ElectoralDistrictName, "Carleton")) %>% 
+  filter(fedcreate>2002) %>% 
+  view()
+fed%>% 
+  filter(str_detect(ElectoralDistrictName, "Lambton")) %>% 
+  filter(fedcreate>2002) %>% 
+  view()
+
+fed %>% 
+  filter(str_detect(ElectoralDistrictName, "Glengarry"))
 #Set Northern Ridings
 
 #Defining northern ridings
@@ -354,15 +277,212 @@ northern_ridings <- c("Algoma--Manitoulin",
                       "Thunder Bay--Atikokan", 
                       "Thunder Bay--Superior North", 
                       "Timiskaming--Cochrane", 
-                      "Timmins", "Parry Sound--Muskoka", "Timmins--James Bay")
-#check
-
-#Creating dummy variable in the Ontario districts
-on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
+                      "Timmins", "Parry Sound--Muskoka", "Timmins--James Bay", "Algoma--Manitoulin--Kapuskasing", "	
+Nipissing--Timiskaming", "Renfrew--Nipissing--Pembroke", "Thunder Bay--Rainy River", "Nipissing--Timiskaming", "Kenora")
 
 #check
 on %>% 
-  filter(is.na(FED)) 
+  mutate(fedcreate=case_when(
+    Date==2007|Date==2011|Date==2014 ~ 2003,
+    Date>2017 ~ 2013
+  ))->on
+#Creating dummy variable in the Ontario districts
+on$northern <- ifelse(on$ElectoralDistrictName %in% northern_ridings, 1, 0)
+fed %>% 
+  filter(str_detect(ElectoralDistrictName, "Ottawa|Orléans"))
+on %>% 
+  filter(str_detect(ElectoralDistrictName, "Orlé"))
+fed %>% 
+  filter(str_detect(ElectoralDistrictName, "Orléans"))
+on %>% 
+  filter(str_detect(ElectoralDistrictName, "Orléans")&fedcreate==2013)
+fed%>% 
+  filter(str_detect(ElectoralDistrictName, "Orléans")&fedcreate==2013)
+fed$ElectoralDistrictName<-recode(fed$ElectoralDistrictName, 
+                                  "Carleton--Lanark"="Carleton--Mississippi Mills",
+                                 "Middlesex--Kent--Lambton"="Lambton--Kent--Middlesex",
+                                 #"Orléans"="Ottawa--Orléans",
+                                 "Ottawa--Oréans"="Ottawa--Orléans",
+                                 "Clarington--Scugog--Uxbridge"="Durham",
+                                 "Grey--Bruce--Owen Sound"="Bruce--Grey--Owen Sound")
+
+on %>% 
+  filter(str_detect(ElectoralDistrictName, "Ajax")) %>% 
+  filter(Date>2003) %>% 
+  view()
+fed %>% 
+  filter(fedcreate==2003) %>% view()
+fed%>% 
+  filter(str_detect(ElectoralDistrictName, "Ajax")) %>% 
+ # filter(fedcreate==2003) %>% 
+  view()
+# on %>% filter(str_detect(ElectoralDistrictName, "Grey")) %>% filter(fedcreate==2003)
+# fed %>% filter(str_detect(ElectoralDistrictName, "Grey"))%>% filter(fedcreate==2003)
+on %>% filter(str_detect(ElectoralDistrictName, "Orléans")) %>% filter(fedcreate==2013)
+fed %>% filter(str_detect(ElectoralDistrictName, "Orlé"))%>% filter(fedcreate==2013)
+
+# Check for Barrie
+# on %>% 
+#   filter(str_detect(ElectoralDistrictName, "Barrie")) %>% view()
+# Convert on to Title Case
+# 
+on %>% left_join(., select(fed, -ElectoralDistrictNameFrench)) %>%
+  filter(fedcreate==2013) %>%
+  select(fed_code=id, ElectoralDistrictName, Date, northern) %>%
+  filter(northern!=1) %>%
+  filter(is.na(fed_code)) 
+
+names(on)
+on %>% left_join(., select(fed, -ElectoralDistrictNameFrench)) %>% 
+  rename(fed_code=id)->on
+
+
+  #filter(fedcreate==2013) %>%
+  #select(fed_code=id, ElectoralDistrictName, Date, northern) %>%
+  #filter(northern!=1) ->on
+
+# on %>% left_join(., select(fed, -ElectoralDistrictNameFrench)) %>%
+#   filter(fedcreate>2002) %>%
+#   #rename id to fed_code to use the 5 digit elecdtions canada code throughout
+#   select(fed_code=id, ElectoralDistrictName, Date, northern) %>% 
+#   #filter(northern!=1) %>%
+#   filter(is.na(fed_code)) 
+
+  
+# on %>% 
+# left_join(., select(fed, -ElectoralDistrictNameFrench)) %>%  
+#   filter(!is.na(id))
+# on <- on %>%ddd
+#   mutate(FED = case_when(
+#    Date>2014& ElectoralDistrictName == "Ajax" ~ 35001,
+#    Date>2014& ElectoralDistrictName == "Algoma--Manitoulin--Kapuskasing" ~ 35002,
+#    Date>2014& ElectoralDistrictName == "Aurora--Oak Ridges--Richmond Hill" ~ 35003,
+#    Date>2014& ElectoralDistrictName == "Barrie--Innisfil" ~ 35004,
+#    Date>2014& ElectoralDistrictName == "Barrie--Springwater--Oro-Medonte" ~ 35005,
+#    Date>2014& ElectoralDistrictName == "Bay of Quinte" ~ 35006,
+#    Date>2014& ElectoralDistrictName == "Beaches--East York" ~ 35007,
+#    Date>2014& ElectoralDistrictName == "Brampton Centre" ~ 35008,
+#    Date>2014& ElectoralDistrictName == "Brampton East" ~ 35009,
+#    Date>2014& ElectoralDistrictName == "Brampton North" ~ 35010,
+#    Date>2014&ElectoralDistrictName == "Brampton South" ~ 35011,
+#    Date>2014& ElectoralDistrictName == "Brampton West" ~ 35012,
+#    Date>2014& ElectoralDistrictName == "Brantford--Brant" ~ 35013,
+#    Date>2014& ElectoralDistrictName == "Bruce--Grey--Owen Sound" ~ 35014,
+#    Date>2014& ElectoralDistrictName == "Burlington" ~ 35015,
+#    Date>2014&ElectoralDistrictName == "Cambridge" ~ 35016,
+#    Date>2014& ElectoralDistrictName == "Carleton" ~ 35088,
+#    Date>2014&ElectoralDistrictName == "Chatham-Kent--Leamington" ~ 35017,
+#    Date>2014& ElectoralDistrictName == "Davenport" ~ 35018,
+#    Date>2014&ElectoralDistrictName == "Don Valley East" ~ 35019,
+#    Date>2014&ElectoralDistrictName == "Don Valley North" ~ 35020,
+#    Date>2014& ElectoralDistrictName == "Don Valley West" ~ 35021,
+#    Date>2014&ElectoralDistrictName == "Dufferin--Caledon" ~ 35022,
+#    Date>2014&ElectoralDistrictName == "Durham" ~ 35023,
+#    Date>2014&ElectoralDistrictName == "Eglinton--Lawrence" ~ 35024,
+#    Date>2014&ElectoralDistrictName == "Elgin--Middlesex--London" ~ 35025,
+#    Date>2014&ElectoralDistrictName == "Essex" ~ 35026,
+#    Date>2014&ElectoralDistrictName == "Etobicoke Centre" ~ 35027,
+#    Date>2014&ElectoralDistrictName == "Etobicoke--Lakeshore" ~ 35028,
+#    Date>2014&ElectoralDistrictName == "Etobicoke North" ~ 35029,
+#    Date>2014& ElectoralDistrictName == "Flamborough--Glanbrook" ~ 35030,
+#    Date>2014& ElectoralDistrictName == "Glengarry--Prescott--Russell" ~ 35031,
+#    Date>2014&ElectoralDistrictName == "Guelph" ~ 35032,
+#    Date>2014&ElectoralDistrictName == "Haldimand--Norfolk" ~ 35033,
+#    Date>2014&ElectoralDistrictName == "Haliburton--Kawartha Lakes--Brock" ~ 35034,
+#    Date>2014&ElectoralDistrictName == "Hamilton Centre" ~ 35035,
+#    Date>2014& ElectoralDistrictName == "Hamilton East--Stoney Creek" ~ 35036,
+#    Date>2014& ElectoralDistrictName == "Hamilton Mountain" ~ 35037,
+#    Date>2014& ElectoralDistrictName == "Hamilton West--Ancaster--Dundas" ~ 35038,
+#    Date>2014& ElectoralDistrictName == "Hastings--Lennox and Addington" ~ 35039,
+#    Date>2014& ElectoralDistrictName == "Huron--Bruce" ~ 35040,
+#    Date>2014& ElectoralDistrictName == "Kanata--Carleton" ~ 35041,
+#    Date>2014& ElectoralDistrictName == "Kenora" ~ 35042,
+#    Date>2014&ElectoralDistrictName == "King--Vaughan" ~ 35043,
+#    Date>2014&ElectoralDistrictName == "Kingston and the Islands" ~ 35044,
+#    Date>2014& ElectoralDistrictName == "Kitchener Centre" ~ 35045,
+#    Date>2014& ElectoralDistrictName == "Kitchener--Conestoga" ~ 35046,
+#    Date>2014& ElectoralDistrictName == "Kitchener South--Hespeler" ~ 35047,
+#    Date>2014& ElectoralDistrictName == "Lambton--Kent--Middlesex" ~ 35048,
+#    Date>2014& ElectoralDistrictName == "Lanark--Frontenac--Kingston" ~ 35049,
+#    Date>2014& ElectoralDistrictName == "Leeds--Grenville--Thousand Islands and Rideau Lakes" ~ 35050,
+#    Date>2014& ElectoralDistrictName == "London--Fanshawe" ~ 35051,
+#    Date>2014&ElectoralDistrictName == "London North Centre" ~ 35052,
+#    Date>2014&ElectoralDistrictName == "London West" ~ 35053,
+#    Date>2014&ElectoralDistrictName == "Markham--Stouffville" ~ 35054,
+#    Date>2014& ElectoralDistrictName == "Markham--Thornhill" ~ 35055,
+#    Date>2014& ElectoralDistrictName == "Markham--Unionville" ~ 35056,
+#    Date>2014& ElectoralDistrictName == "Milton" ~ 35057,
+#    Date>2014& ElectoralDistrictName == "Mississauga Centre" ~ 35058,
+#    Date>2014& ElectoralDistrictName == "Mississauga East--Cooksville" ~ 35059,
+#    Date>2014& ElectoralDistrictName == "Mississauga--Erin Mills" ~ 35060,
+#    Date>2014& ElectoralDistrictName == "Mississauga--Lakeshore" ~ 35061,
+#    Date>2014& ElectoralDistrictName == "Mississauga--Malton" ~ 35062,
+#    Date>2014&ElectoralDistrictName == "Mississauga--Streetsville" ~ 35063,
+#    Date>2014& ElectoralDistrictName == "Nepean" ~ 35065,
+#    Date>2014& ElectoralDistrictName == "Newmarket--Aurora" ~ 35065,
+#    Date>2014&ElectoralDistrictName == "Niagara Centre" ~ 35066,
+#    Date>2014& ElectoralDistrictName == "Niagara Falls" ~ 35067,
+#    Date>2014& ElectoralDistrictName == "Niagara West" ~ 35068,
+#    Date>2014& ElectoralDistrictName == "Nickel Belt" ~ 35069,
+#    Date>2014& ElectoralDistrictName == "Nipissing--Timiskaming" ~ 35070,
+#    Date>2014& ElectoralDistrictName == "Northumberland--Peterborough South" ~ 35071,
+#    Date>2014&ElectoralDistrictName == "Oakville" ~ 35072,
+#    Date>2014& ElectoralDistrictName == "Oakville North--Burlington" ~ 35073,
+#    Date>2014& ElectoralDistrictName == "Orléans" ~ 35076,
+#    Date>2014& ElectoralDistrictName == "Oshawa" ~ 35074,
+#    Date>2014& ElectoralDistrictName == "Ottawa Centre" ~ 35075,
+#    Date>2014& ElectoralDistrictName == "Ottawa South" ~ 35077,
+#    Date>2014&ElectoralDistrictName == "Ottawa--Vanier" ~ 35078,
+#    Date>2014&ElectoralDistrictName == "Ottawa West--Nepean" ~ 35079,
+#    Date>2014&ElectoralDistrictName == "Oxford" ~ 35080,
+#    Date>2014&ElectoralDistrictName == "Parkdale--High Park" ~ 35081,
+#    Date>2014& ElectoralDistrictName == "Parry Sound--Muskoka" ~ 35082,
+#    Date>2014& ElectoralDistrictName == "Perth--Wellington" ~ 35083,
+#    Date>2014& ElectoralDistrictName == "Peterborough--Kawartha" ~ 35084,
+#    Date>2014& ElectoralDistrictName == "Pickering--Uxbridge" ~ 35085,
+#    Date>2014& ElectoralDistrictName == "Renfrew--Nipissing--Pembroke" ~ 35086,
+#     ElectoralDistrictName == "Richmond Hill" ~ 35087,
+#     ElectoralDistrictName == "St. Catharines" ~ 35089,
+#     ElectoralDistrictName == "Toronto--St. Paul's" ~ 35090,
+#     ElectoralDistrictName == "Sarnia--Lambton" ~ 35091,
+#     ElectoralDistrictName == "Sault Ste. Marie" ~ 35092,
+#     ElectoralDistrictName == "Scarborough--Agincourt" ~ 35093,
+#     ElectoralDistrictName == "Scarborough Centre" ~ 35094,
+#     ElectoralDistrictName == "Scarborough--Guildwood" ~ 35095,
+#     ElectoralDistrictName == "Scarborough North" ~ 35096,
+#     ElectoralDistrictName == "Scarborough--Rouge Park" ~ 35097,
+#     ElectoralDistrictName == "Scarborough Southwest" ~ 35098,
+#     ElectoralDistrictName == "Simcoe--Grey" ~ 35099,
+#     ElectoralDistrictName == "Simcoe North" ~ 35100,
+#     ElectoralDistrictName == "Spadina--Fort York" ~ 35101,
+#     ElectoralDistrictName == "Stormont--Dundas--South Glengarry" ~ 35102,
+#     ElectoralDistrictName == "Sudbury" ~ 35103,
+#     ElectoralDistrictName == "Thornhill" ~ 35104,
+#     ElectoralDistrictName == "Thunder Bay--Rainy River" ~ 35105, 
+#     ElectoralDistrictName == "Thunder Bay--Superior North" ~ 35106,
+#     ElectoralDistrictName == "Timmins--James Bay" ~ 35107,
+#     ElectoralDistrictName == "Toronto Centre" ~ 35108,
+#     ElectoralDistrictName == "Toronto--Danforth" ~ 35109,
+#     ElectoralDistrictName == "Toronto--St. Paul's" ~ 35090,
+#     ElectoralDistrictName == "University--Rosedale" ~ 35110,
+#     ElectoralDistrictName == "Vaughan--Woodbridge" ~ 35111,
+#     ElectoralDistrictName == "Waterloo" ~ 35112,
+#     ElectoralDistrictName == "Wellington--Halton Hills" ~ 35113,
+#     ElectoralDistrictName == "Whitby" ~ 35114,
+#     ElectoralDistrictName == "Willowdale" ~ 35115,
+#     ElectoralDistrictName == "Windsor--Tecumseh" ~ 35116,
+#     ElectoralDistrictName == "Windsor West" ~ 35117,
+#     ElectoralDistrictName == "York Centre" ~ 35118,
+#     ElectoralDistrictName == "York--Simcoe" ~ 35119,
+#     ElectoralDistrictName == "York South--Weston" ~ 35120,
+#     ElectoralDistrictName == "Humber River--Black Creek" ~ 35121,
+#     TRUE ~ NA_real_  # Default case for unmatched districts
+#   ))->on
+
+
+
+#check
+
 #
 
 on %>% 
@@ -384,7 +504,25 @@ on %>%
   filter(northern==1) %>% 
   filter(Party=="PC") %>% 
   group_by(Date) %>% summarize(n=length(unique(ElectoralDistrictName)))
-# on %>% 
-#   filter(Date==2007) %>% 
-#   filter(str_detect(ElectoralDistrictName, "Timmins|Thunder"))
+
+
+# import the 2011 boundaries
+library(sf)
+library(here)
+ontario11<-read_sf(here("data/electoral_districts/2012_ontario_ped/"))
+head(ontario11)
+nrow(ontario11)
+library(tidyverse)
+ontario11 %>% 
+  group_by(ED_ID) %>% 
+  summarize(geometry=st_union(geometry)) ->ontario11
+
+on11 %>% 
+  select(ElectoralDistrictNumber, ElectoralDistrictName) %>% 
+  distinct()
+#This gets the Electoral District ames and adds them to ontario 11
+ontario11 %>% 
+  left_join(.,on11, c("ED_ID"="ElectoralDistrictNumber")) %>% 
+  select(ED_ID, ElectoralDistrictName, geometry) %>% 
+  distinct()->ontario11
 

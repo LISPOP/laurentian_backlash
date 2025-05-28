@@ -3,52 +3,63 @@
 # import the ontario voting results, the ontario riding boundaries
 # gets the non-northern demographics from statistics canada and estimates the demographics
 # on the northern districts
-source("R_Scripts/2_get_non_northern_demographics_cpsr.R")
+source("R_Scripts/2_get_non_northern_demographics.R")
 
-
-#This deals with the FED variable which is stored as characters
-#Brynn, this is what you did, assigning the FED codes to each provincial district
-# in Ontario
-on$FED<-as.character(on$FED)
-
-#This merges the northern demographicdata data into the `on` dataframe that Brynn and Nicole constructed
-# it effectively takes the demographic statistics for northern ridings
-# that have been estimated in the script 2_get_northern_demographics
-# and merges those statistics to the `on` object
-names(on_da_tongfen)
 #I have waited a long time to do this. 
 # This is the object created by the tongfen procedure
-on_da_tongfen %>% 
+names(on)
+names(northern_tongfen)
+northern_tongfen_complete$density
+northern_tongfen_complete %>%
   #pick out just these key variables
   select(ED_ID, ENGLISH_NA, 
-         Population=Population_source, 
-         Density=density, French=francophones, Gini=gini, `Not Labour Force`=not_in_labour_force,
-         Certificate=post_secondary_certificate_diploma_degree, Unemployed=unemployed, Average_income=income,Visible=visible_minority) 
+         population,
+        density, francophones,certificate, income,first_nations, mining, age, phds, fedcreate, northern) %>% 
   #Drop the geometry e.g. the boudnaries of each dist
   st_drop_geometry() %>% 
   #Now join it to `on` matching the EDID variable in on_da_tongfen
   # with the ElectoralDistrictNumber variable in `on`
-  right_join(., on, by=c("ED_ID"="ElectoralDistrictNumber"))->on
-#Check
-non_northern_data
+  right_join(., on, by=c("ED_ID"="ElectoralDistrictNumber", "fedcreate", "northern")) ->on
+
+on %>%
+  filter(str_detect(ElectoralDistrictName, "Ajax|Sudbury")) %>%
+filter(Date>2003)
+
 
 #We are now missing the non_northern_data
 # This was pulled directly from Statistics Canada in 2_get_non_northern_demographics.R
-view(on)
 
-non_northern_data %>% 
-  select(-DGUID)->non_northern_data
-on %>% 
-  rows_patch(., non_northern_data, by=c("FED")) ->on
-on %>% 
-  select(-IsGeneralElection, -ResignedMPPName)->on
+names(non_northern_data)
+
+non_northern_data_complete %>% 
+  #filter(fedcreate==2013) %>% 
+  select(fed_code, fed,fedcreate, density)
+
+# on %>% 
+#   rows_patch(., select(non_northern_data_complete,c(-fed)), by=c("fed_code", "fedcreate", "northern")) ->out
+# out %>%
+#   filter(str_detect(ElectoralDistrictName, "Ajax|Sudbury")) %>%
+#   filter(Date>2003)%>% view()
+on %>%
+  rows_patch(., select(non_northern_data_complete,c(-fed)), by=c("fed_code", "fedcreate", "northern")) ->on
+
+# non_northern_data_complete %>% 
+#   slice(37)
+#con %>% 
+ # filter(Date>2006&str_detect(ElectoralDistrictName, "Ajax")) %>% view()
+names(on)
+#on %>% 
+#  select(-IsGeneralElection, -ResignedMPPName)->on
 
 #This line divides each demographic variable by population to get a percent
-
+#names(on)
 on %>% 
-  rename(Population=Population_source) %>% 
-  mutate(across(francophones:phds, ~(.x/Population), .names="{.col}_pct"))->on
+  #rename(Population=Population_source) %>% 
+  mutate(across(c(francophones, certificate,first_nations,mining,phds), ~(.x/population), .names="{.col}_pct")) ->on
 #Which ridings are the most francophone
-on %>% 
-  distinct(ElectoralDistrictName, francophones_pct) %>% 
-  slice_max(francophones_pct, n=10)
+on %>% ungroup() %>% 
+  distinct(ElectoralDistrictName, fedcreate,Date,francophones_pct) %>% 
+  filter(str_detect(ElectoralDistrictName, "Glengarry")) %>% 
+  slice_max(francophones_pct, n=30) 
+
+
